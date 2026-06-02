@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, Mail, Wallet, Tag, Repeat, PieChart, MessageCircle, ArrowRightLeft, Send, Target, Globe, Briefcase, TrendingUp, Building2, Languages } from "lucide-react";
+import { Users, Mail, Wallet, Tag, Repeat, PieChart, MessageCircle, ArrowRightLeft, Send, Target, Globe, Briefcase, TrendingUp, Building2, Languages, LogOut } from "lucide-react";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { getServerT } from "@/lib/user-lang";
 
@@ -181,14 +181,32 @@ export default async function SettingsPage() {
       </Link>
 
       <div className="card p-5 flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-600 grid place-items-center">
+        <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 grid place-items-center">
           <Wallet className="w-5 h-5" />
         </div>
         <div className="flex-1">
           <div className="font-semibold">{ctx.workspace.name}</div>
-          <div className="text-sm text-slate-500">Default currency: {ctx.workspace.default_currency}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">Default currency: {ctx.workspace.default_currency}</div>
         </div>
       </div>
+
+      {/* Sign out (visible on mobile + desktop) */}
+      <form action="/auth/signout" method="POST" className="md:hidden">
+        <button
+          type="submit"
+          className="card p-5 flex items-center gap-4 w-full text-left hover:bg-red-50 dark:hover:bg-red-950/30"
+        >
+          <div className="w-11 h-11 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 grid place-items-center">
+            <LogOut className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="font-semibold text-red-600 dark:text-red-400">Sign out</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              {ctx.user.email}
+            </div>
+          </div>
+        </button>
+      </form>
     </div>
   );
 }

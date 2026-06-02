@@ -130,12 +130,14 @@ export function AppShell({
 
         <div className="px-4 py-5 md:px-8 md:py-8 pb-24 md:pb-8">{children}</div>
 
-        {/* Mobile FAB — quick add transaction (hidden on desktop and on
-            transaction-creation / edit flows where it would be redundant).
-            The check matches any sub-path of /transactions (e.g.
-            /transactions/new, /transactions/[id]/edit) but NOT the list
-            itself (/transactions). */}
-        {!(pathname && pathname !== "/transactions" && pathname.startsWith("/transactions/")) && (
+        {/* Mobile FAB — quick add transaction.
+            Hidden on transaction-creation / edit flows (redundant) and on
+            Settings (purely configuration area, no need for quick add). */}
+        {!(
+          pathname &&
+          ((pathname !== "/transactions" && pathname.startsWith("/transactions/")) ||
+            pathname.startsWith("/settings"))
+        ) && (
           <Link
             href="/transactions/new"
             aria-label="Add transaction"
