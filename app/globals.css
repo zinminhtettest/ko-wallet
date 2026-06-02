@@ -8,17 +8,16 @@
   --card: #ffffff;
   --border: #e2e8f0;
   --muted: #64748b;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b1220;
-    --fg: #e2e8f0;
-    --card: #111827;
-    --border: #1f2937;
-    --muted: #94a3b8;
-  }
+html.dark {
+  --bg: #0b1220;
+  --fg: #e2e8f0;
+  --card: #111827;
+  --border: #1f2937;
+  --muted: #94a3b8;
+  color-scheme: dark;
 }
 
 html { background: var(--bg); color: var(--fg); }

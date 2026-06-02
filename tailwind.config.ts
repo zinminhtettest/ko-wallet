@@ -1,7 +1,10 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: "media", // auto follow user's OS preference
+  // Use class-based dark mode so a manual toggle can override the OS default.
+  // The <html> element gets `class="dark"` whenever the chosen theme resolves
+  // to dark (either explicit Dark choice or System + OS prefers-dark).
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",

@@ -20,9 +20,26 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+// Runs BEFORE React hydrates to set the html.dark class.
+// Prevents the light→dark flash for users on Dark or System+OS-prefers-dark.
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var t = localStorage.getItem('ko_theme') || 'system';
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var isDark = t === 'dark' || (t === 'system' && prefersDark);
+    if (isDark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="font-sans antialiased min-h-screen">
         {children}
         <script

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Home, ListChecks, BarChart3, Settings, LogOut, Wallet, Plus, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -78,6 +79,7 @@ export function AppShell({
           <div className="flex-1 min-w-0">
             <WorkspaceSwitcher activeId={activeWorkspaceId} />
           </div>
+          <ThemeToggle className="mt-0.5" />
           <NotificationBell className="w-9 h-9 mt-0.5" />
         </div>
 
@@ -118,6 +120,7 @@ export function AppShell({
           <div className="flex-1 min-w-0">
             <WorkspaceSwitcher activeId={activeWorkspaceId} />
           </div>
+          <ThemeToggle className="flex-shrink-0" />
           <NotificationBell className="w-9 h-9 flex-shrink-0" />
           <Link
             href="/transactions/new"
