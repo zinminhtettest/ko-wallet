@@ -146,9 +146,11 @@ export default async function DashboardPage({
             {range.label} · <ClientDate value={range.from.toISOString()} /> → <ClientDate value={range.to.toISOString()} />
           </p>
         </div>
-        <Link href="/transactions/new" className="btn-primary hidden md:inline-flex">
-          <Plus className="w-4 h-4" /> Add Transaction
-        </Link>
+        <div className="hidden md:block">
+          <Link href="/transactions/new" className="btn-primary">
+            <Plus className="w-4 h-4" /> Add Transaction
+          </Link>
+        </div>
       </div>
 
       <DateRangeFilter />
