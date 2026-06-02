@@ -36,6 +36,11 @@ export async function GET(request: Request) {
 async function processRecurring() {
   const srv = createServiceClient();
   const now = new Date();
+
+  // 1) Send reminders for rules whose reminder_days_before window has begun
+  await processReminders(srv, now);
+
+  // 2) Materialize due recurring rules
   const { data: rules, error } = await srv
     .from("recurring_rules")
     .select("*")
@@ -81,4 +86,41 @@ function advance(from: Date, frequency: string): Date {
   else if (frequency === "weekly") d.setUTCDate(d.getUTCDate() + 7);
   else if (frequency === "monthly") d.setUTCMonth(d.getUTCMonth() + 1);
   return d;
+}
+
+async function processReminders(srv: any, now: Date) {
+  const { data: rules } = await srv
+    .from("recurring_rules")
+    .select("id, user_id, workspace_id, name, amount, currency, next_run_at, reminder_days_before, last_reminder_at")
+    .eq("active", true)
+    .gt("reminder_days_before", 0);
+  if (!rules?.length) return;
+
+  for (const r of rules as any[]) {
+    const next = new Date(r.next_run_at);
+    const reminderAt = new Date(next.getTime() - r.reminder_days_before * 86400_000);
+    // Trigger reminder if "now >= reminderAt" and we haven't sent one for this run yet
+    const lastReminder = r.last_reminder_at ? new Date(r.last_reminder_at) : null;
+    const alreadySentForThisRun = lastReminder && lastReminder > reminderAt;
+    if (now < reminderAt || alreadySentForThisRun || now >= next) continue;
+
+    const title = `Upcoming: ${r.name}`;
+    const body = `${r.amount} ${r.currency} due ${next.toLocaleDateString()}`;
+    await srv.from("notifications").insert({
+      user_id: r.user_id,
+      workspace_id: r.workspace_id,
+      kind: "system",
+      title,
+      body,
+      link: "/settings/recurring",
+    });
+    try {
+      const { pushToTelegram } = await import("@/lib/telegram-push");
+      await pushToTelegram(r.user_id, `🔔 <b>${title}</b>\n${body}`);
+    } catch {}
+    await srv
+      .from("recurring_rules")
+      .update({ last_reminder_at: now.toISOString() })
+      .eq("id", r.id);
+  }
 }

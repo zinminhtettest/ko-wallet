@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     note,
     frequency,
     next_run_at,
+    reminder_days_before,
   } = body;
 
   if (!name || !amount || !currency || !kind || !frequency || !next_run_at) {
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       note: note || null,
       frequency,
       next_run_at: new Date(next_run_at).toISOString(),
+      reminder_days_before: parseInt(reminder_days_before as any) || 0,
       active: true,
     })
     .select("id")

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Category, Currency, TxKind } from "@/lib/types";
 import { Trash2 } from "lucide-react";
+import { VoiceCaptureButton } from "@/components/VoiceCaptureButton";
 
 // Convert a stored ISO timestamp (UTC) to the "YYYY-MM-DDTHH:mm" format that
 // <input type="datetime-local"> expects in the BROWSER'S local timezone.
@@ -127,8 +128,28 @@ export function TransactionForm({
     router.refresh();
   }
 
+  function applyVoice(p: any) {
+    if (p.kind === "expense" || p.kind === "income") setKind(p.kind);
+    if (p.amount) setAmount(String(p.amount));
+    if (p.currency && ["THB", "MMK", "USD"].includes(p.currency)) {
+      setCurrency(p.currency as Currency);
+    }
+    if (p.merchant) setMerchant(p.merchant);
+    if (p.note) setNote(p.note);
+    if (p.category_hint) {
+      const desiredKind = p.kind || kind;
+      const match = categories.find(
+        (c) =>
+          c.kind === desiredKind &&
+          c.name.toLowerCase().includes(p.category_hint.toLowerCase())
+      );
+      if (match) setCategoryId(match.id);
+    }
+  }
+
   return (
     <form onSubmit={onSubmit} className="space-y-5 max-w-xl">
+      {!existing && <VoiceCaptureButton onParsed={applyVoice} />}
       {/* Kind toggle */}
       <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
         {(["expense", "income"] as TxKind[]).map((k) => (

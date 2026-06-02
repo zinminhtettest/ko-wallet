@@ -36,13 +36,22 @@ export default async function ReportsPage() {
           <h1 className="text-2xl font-bold">Reports</h1>
           <p className="text-sm text-slate-500">Last 6 months overview</p>
         </div>
-        <Link
-          href="/reports/print"
-          target="_blank"
-          className="btn-secondary text-sm"
-        >
-          <FileText className="w-4 h-4" /> Printable Report (PDF)
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/reports/tax"
+            target="_blank"
+            className="btn-secondary text-sm"
+          >
+            <FileText className="w-4 h-4" /> Tax Report
+          </Link>
+          <Link
+            href="/reports/print"
+            target="_blank"
+            className="btn-secondary text-sm"
+          >
+            <FileText className="w-4 h-4" /> Monthly PDF
+          </Link>
+        </div>
       </div>
 
       <ReportsCharts transactions={list as any} />

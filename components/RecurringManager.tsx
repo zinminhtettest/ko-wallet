@@ -33,6 +33,7 @@ export function RecurringManager({ categories }: { categories: Category[] }) {
   const [note, setNote] = useState("");
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("monthly");
   const [nextRun, setNextRun] = useState(new Date().toISOString().slice(0, 16));
+  const [reminderDays, setReminderDays] = useState("0");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -65,6 +66,7 @@ export function RecurringManager({ categories }: { categories: Category[] }) {
         note: note || null,
         frequency,
         next_run_at: nextRun,
+        reminder_days_before: parseInt(reminderDays) || 0,
       }),
     });
     const j = await r.json();
@@ -187,6 +189,16 @@ export function RecurringManager({ categories }: { categories: Category[] }) {
               <label className="label">Next Run</label>
               <input type="datetime-local" className="input" value={nextRun} onChange={(e) => setNextRun(e.target.value)} required />
             </div>
+          </div>
+          <div>
+            <label className="label">🔔 Reminder days before (0 = off)</label>
+            <select className="input" value={reminderDays} onChange={(e) => setReminderDays(e.target.value)}>
+              <option value="0">Off</option>
+              <option value="1">1 day before</option>
+              <option value="2">2 days before</option>
+              <option value="3">3 days before</option>
+              <option value="7">7 days before</option>
+            </select>
           </div>
           {err && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{err}</div>}
           <button type="submit" disabled={saving} className="btn-primary w-full py-2.5">
