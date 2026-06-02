@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Returns the user's active workspace using DB RPC functions.
- * Logs verbosely so failures show up in Vercel runtime logs.
+ * Returns the user's active workspace using a single DB RPC that bypasses RLS.
+ * The RPC also bootstraps a workspace + default categories if the user has none.
  */
 export async function getActiveWorkspace() {
   const supabase = createClient();
@@ -10,82 +10,39 @@ export async function getActiveWorkspace() {
     data: { user },
     error: userErr,
   } = await supabase.auth.getUser();
+  if (userErr || !user) return null;
 
-  if (userErr) {
-    console.log("[ws] getUser error:", userErr.message);
+  const displayName =
+    (user.user_metadata as any)?.full_name ||
+    (user.user_metadata as any)?.name ||
+    user.email ||
+    "My";
+
+  const { data, error } = await supabase.rpc("get_or_bootstrap_workspace", {
+    display_name: displayName,
+  });
+
+  if (error) {
+    console.log("[ws] RPC error:", error.message, error.code);
     return null;
   }
-  if (!user) {
-    console.log("[ws] no user");
-    return null;
-  }
-  console.log("[ws] user:", user.id, user.email);
-
-  // 1) Lookup existing workspace via RPC
-  const { data: wsIdRaw, error: rpcErr } = await supabase.rpc(
-    "get_my_workspace_id"
-  );
-  if (rpcErr) {
-    console.log("[ws] get_my_workspace_id error:", rpcErr.message, rpcErr.code);
-  }
-  let wsId: string | null = (wsIdRaw as any) ?? null;
-  console.log("[ws] existing wsId:", wsId);
-
-  // 2) Bootstrap if missing
-  if (!wsId) {
-    const displayName =
-      (user.user_metadata as any)?.full_name ||
-      (user.user_metadata as any)?.name ||
-      user.email ||
-      "My";
-    const { data: createdId, error: bsErr } = await supabase.rpc(
-      "bootstrap_my_workspace",
-      { display_name: displayName }
-    );
-    if (bsErr) {
-      console.log(
-        "[ws] bootstrap RPC error:",
-        bsErr.message,
-        bsErr.code,
-        bsErr.details
-      );
-      return null;
-    }
-    wsId = (createdId as any) ?? null;
-    console.log("[ws] bootstrapped wsId:", wsId);
-  }
-  if (!wsId) {
-    console.log("[ws] no wsId after bootstrap");
+  if (!data || (Array.isArray(data) && data.length === 0)) {
+    console.log("[ws] RPC returned empty");
     return null;
   }
 
-  // 3) Fetch workspace details
-  const { data: ws, error: wsErr } = await supabase
-    .from("workspaces")
-    .select("id, name, owner_id, default_currency, created_at")
-    .eq("id", wsId)
-    .single();
-  if (wsErr) {
-    console.log("[ws] workspaces fetch error:", wsErr.message, wsErr.code);
-  }
-  const { data: m, error: mErr } = await supabase
-    .from("workspace_members")
-    .select("role")
-    .eq("workspace_id", wsId)
-    .eq("user_id", user.id)
-    .single();
-  if (mErr) {
-    console.log("[ws] members fetch error:", mErr.message, mErr.code);
-  }
+  const row = Array.isArray(data) ? data[0] : data;
+  console.log("[ws] OK", row.workspace_id);
 
-  if (!ws) {
-    console.log("[ws] workspace row not loaded");
-    return null;
-  }
-  console.log("[ws] OK", ws.id);
   return {
-    workspace: ws,
-    role: (m?.role as "owner" | "member") || "member",
+    workspace: {
+      id: row.workspace_id,
+      name: row.workspace_name,
+      owner_id: row.owner_id,
+      default_currency: row.default_currency,
+      created_at: new Date().toISOString(),
+    },
+    role: (row.role as "owner" | "member") || "member",
     user,
   };
 }
