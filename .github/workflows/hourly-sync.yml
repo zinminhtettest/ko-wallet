@@ -1,0 +1,33 @@
+name: Hourly Bank Sync
+
+# Triggers every hour at minute 0 to import new bank email transactions
+# from all connected Gmail accounts. Replaces Vercel's daily Hobby cron.
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour at :00
+  workflow_dispatch:       # also allow manual triggering from the GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger Vercel cron endpoint
+        env:
+          APP_URL: https://kowallet.vercel.app
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET secret is not set on the GitHub repo."
+            exit 1
+          fi
+          echo "Hitting ${APP_URL}/api/cron/sync ..."
+          response=$(curl -sS -X GET "${APP_URL}/api/cron/sync" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP_STATUS:%{http_code}")
+          echo "$response"
+          status=$(echo "$response" | tail -1 | sed 's/HTTP_STATUS://')
+          if [ "$status" != "200" ]; then
+            echo "::error::Sync failed with HTTP $status"
+            exit 1
+          fi
