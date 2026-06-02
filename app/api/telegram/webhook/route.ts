@@ -262,6 +262,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // Voice note → Gemini audio transcribe + parse
+  const voice = msg.voice || msg.audio;
+  if (voice?.file_id) {
+    if (!process.env.GEMINI_API_KEY) {
+      await tgSendMessage(chatId, "🎤 Voice support needs GEMINI_API_KEY.");
+      return NextResponse.json({ ok: true });
+    }
+    const audio = await downloadTelegramFile(voice.file_id);
+    if (!audio) {
+      await tgSendMessage(chatId, "🎤 Voice download failed. Try again.");
+      return NextResponse.json({ ok: true });
+    }
+    const voiceParsed = await parseAudioWithGemini(audio.base64, audio.mimeType);
+    if (!voiceParsed) {
+      await tgSendMessage(chatId, "🎤 Could not understand the voice. Try speaking the amount clearly, e.g. \"ထမင်းစား ၁၂၀\".");
+      return NextResponse.json({ ok: true });
+    }
+    await handleParsedTransaction(srv, chatId, voiceParsed, {
+      userId,
+      wsId,
+      defaultCur,
+      sourceLabel: `via Telegram voice${voiceParsed.transcript ? ` · "${voiceParsed.transcript}"` : ""}`,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   // Anything else → try natural language with Gemini
   if (text.startsWith("/")) {
     await tgSendMessage(chatId, "Unknown command. Type /help.");
@@ -293,47 +319,67 @@ export async function POST(request: Request) {
   }
 
   if (parsed.intent === "add_transaction") {
-    const kind = parsed.kind === "income" ? "income" : "expense";
-    const amt = Number(parsed.amount);
-    if (!amt || amt <= 0 || (parsed.confidence ?? 0) < 0.5) {
-      await tgSendMessage(chatId, "🤔 Amount မှန်ကန်အောင် ပြန်ပြောပါ။");
-      return NextResponse.json({ ok: true });
-    }
-    const cur = (parsed.currency && CURRENCIES.includes(parsed.currency))
-      ? parsed.currency
-      : defaultCur;
-    let categoryId: string | null = null;
-    if (parsed.category_hint) {
-      const { data: catRow } = await srv
-        .from("categories")
-        .select("id")
-        .eq("workspace_id", wsId)
-        .eq("kind", kind)
-        .ilike("name", parsed.category_hint)
-        .maybeSingle();
-      if (catRow) categoryId = catRow.id;
-    }
-    await insertTx(srv, {
-      wsId,
+    await handleParsedTransaction(srv, chatId, parsed, {
       userId,
-      amt,
-      cur,
-      kind,
-      categoryId,
-      merchant: parsed.merchant || null,
-      note: parsed.note ? `${parsed.note} (via Telegram)` : "via Telegram",
+      wsId,
+      defaultCur,
+      sourceLabel: "via Telegram",
     });
-    const label = kind === "income" ? "Income" : "Expense";
-    const tail = [parsed.merchant, parsed.category_hint].filter(Boolean).join(" · ");
-    await tgSendMessage(
-      chatId,
-      `✅ ${label} ${amt} ${cur}${tail ? ` · ${tail}` : ""}`
-    );
     return NextResponse.json({ ok: true });
   }
 
   await sendHelp(chatId);
   return NextResponse.json({ ok: true });
+}
+
+// Shared transaction-creation flow used by both text NL and voice NL.
+async function handleParsedTransaction(
+  srv: any,
+  chatId: number | string,
+  parsed: any,
+  ctx: { userId: string; wsId: string; defaultCur: string; sourceLabel: string }
+) {
+  if (parsed.intent !== "add_transaction") {
+    await tgSendMessage(chatId, "🤔 ဘာပြောတာလဲ နားမလည်ပါ။");
+    return;
+  }
+  const kind = parsed.kind === "income" ? "income" : "expense";
+  const amt = Number(parsed.amount);
+  if (!amt || amt <= 0 || (parsed.confidence ?? 0) < 0.5) {
+    await tgSendMessage(chatId, "🤔 Amount မှန်ကန်အောင် ပြန်ပြောပါ။");
+    return;
+  }
+  const cur =
+    parsed.currency && CURRENCIES.includes(parsed.currency)
+      ? parsed.currency
+      : ctx.defaultCur;
+  let categoryId: string | null = null;
+  if (parsed.category_hint) {
+    const { data: catRow } = await srv
+      .from("categories")
+      .select("id")
+      .eq("workspace_id", ctx.wsId)
+      .eq("kind", kind)
+      .ilike("name", parsed.category_hint)
+      .maybeSingle();
+    if (catRow) categoryId = catRow.id;
+  }
+  await insertTx(srv, {
+    wsId: ctx.wsId,
+    userId: ctx.userId,
+    amt,
+    cur,
+    kind,
+    categoryId,
+    merchant: parsed.merchant || null,
+    note: parsed.note ? `${parsed.note} (${ctx.sourceLabel})` : ctx.sourceLabel,
+  });
+  const label = kind === "income" ? "Income" : "Expense";
+  const tail = [parsed.merchant, parsed.category_hint].filter(Boolean).join(" · ");
+  await tgSendMessage(
+    chatId,
+    `✅ ${label} ${amt} ${cur}${tail ? ` · ${tail}` : ""}`
+  );
 }
 
 // ---- helpers ----
@@ -342,7 +388,8 @@ async function sendHelp(chatId: number | string) {
   await tgSendMessage(
     chatId,
     `<b>Ko Wallet Bot</b>\n` +
-      `Natural language also works — just type:\n` +
+      `🎤 <b>Voice notes ပါ ရတယ်</b> — ပြောရုံ "ထမင်းစား ၁၂၀"\n\n` +
+      `Natural language — just type:\n` +
       `• <i>250 baht coffee</i>\n` +
       `• <i>bought lunch for 120 at 7-11</i>\n` +
       `• <i>got salary 50000</i>\n` +
@@ -458,6 +505,79 @@ async function insertTx(
     occurred_at: new Date().toISOString(),
     source: "manual",
   });
+}
+
+async function downloadTelegramFile(
+  fileId: string
+): Promise<{ base64: string; mimeType: string } | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+  try {
+    const meta = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`).then(
+      (r) => r.json()
+    );
+    const filePath = meta?.result?.file_path;
+    if (!filePath) return null;
+    const dl = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
+    if (!dl.ok) return null;
+    const buf = Buffer.from(await dl.arrayBuffer());
+    if (buf.length > 8 * 1024 * 1024) return null; // 8MB cap
+    // Telegram voice messages are OGG with Opus codec
+    const lower = filePath.toLowerCase();
+    let mimeType = "audio/ogg";
+    if (lower.endsWith(".m4a")) mimeType = "audio/mp4";
+    else if (lower.endsWith(".mp3")) mimeType = "audio/mpeg";
+    else if (lower.endsWith(".wav")) mimeType = "audio/wav";
+    else if (lower.endsWith(".oga") || lower.endsWith(".ogg")) mimeType = "audio/ogg";
+    return { base64: buf.toString("base64"), mimeType };
+  } catch (e: any) {
+    console.error("[telegram] file download failed:", e?.message);
+    return null;
+  }
+}
+
+const AUDIO_NL_PROMPT = `${NL_PROMPT}
+
+The input is an AUDIO clip (Burmese / English / Thai / mixed). First transcribe it, then apply the same parsing rules above.
+Add a "transcript" field with the transcribed text:
+
+{
+  "intent": ...,
+  "kind": ...,
+  "amount": ...,
+  "currency": ...,
+  "merchant": ...,
+  "category_hint": ...,
+  "note": ...,
+  "confidence": ...,
+  "transcript": "verbatim transcript"
+}
+
+If unintelligible, return intent="unknown" with confidence < 0.3.`;
+
+async function parseAudioWithGemini(
+  base64: string,
+  mimeType: string
+): Promise<any | null> {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.1,
+      },
+    });
+    const result = await model.generateContent([
+      { text: AUDIO_NL_PROMPT },
+      { inlineData: { mimeType, data: base64 } },
+    ]);
+    const out = result.response.text();
+    return JSON.parse(out);
+  } catch (e: any) {
+    console.error("[telegram] audio parse failed:", e?.message);
+    return null;
+  }
 }
 
 async function parseNaturalLanguage(text: string): Promise<any | null> {
