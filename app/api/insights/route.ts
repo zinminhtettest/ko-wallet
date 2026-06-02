@@ -49,14 +49,66 @@ CURRENCY: Default is ${defaultCurrency}. Round large numbers (e.g. 2,540 not 254
 Be specific to the data — don't write generic platitudes. Cite real category/merchant names from the data.`;
 }
 
+async function callGemini(prompt: string) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("Gemini API key not configured (GEMINI_API_KEY)");
+  }
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  // gemini-2.5-flash = latest free-tier model with best price/quality
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.3,
+    },
+  });
+  const result = await model.generateContent(prompt);
+  return JSON.parse(result.response.text());
+}
+
+async function callDeepSeek(prompt: string) {
+  if (!process.env.DEEPSEEK_API_KEY) {
+    throw new Error("DeepSeek API key not configured (DEEPSEEK_API_KEY)");
+  }
+  // deepseek-chat = current production model (DeepSeek-V3.x family, mapped as user's "V4 pro" alias)
+  const res = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a personal-finance AI. Respond ONLY with a single valid JSON object matching the requested schema. No markdown fences, no commentary.",
+        },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+    }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`DeepSeek HTTP ${res.status}: ${errText.slice(0, 200)}`);
+  }
+  const j = await res.json();
+  const content = j?.choices?.[0]?.message?.content;
+  if (!content) throw new Error("DeepSeek returned empty response");
+  return JSON.parse(content);
+}
+
 export async function POST(request: Request) {
   const ctx = await getActiveWorkspace();
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json({ error: "no_gemini_key" }, { status: 500 });
-  }
 
-  const { language } = await request.json();
+  const body = await request.json();
+  const language = body?.language;
+  const provider: "gemini" | "deepseek" =
+    body?.provider === "deepseek" ? "deepseek" : "gemini";
   const lang = ["en", "my", "th"].includes(language) ? language : "en";
 
   const supabase = createClient();
@@ -100,23 +152,21 @@ export async function POST(request: Request) {
     n: t.note || null,
   }));
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.3,
-    },
-  });
+  const prompt = `${buildPrompt(
+    lang,
+    ctx.workspace.name,
+    ctx.workspace.default_currency
+  )}\n\nTransactions JSON (last 6 weeks):\n${JSON.stringify(compact)}`;
 
   try {
-    const result = await model.generateContent(
-      `${buildPrompt(lang, ctx.workspace.name, ctx.workspace.default_currency)}\n\nTransactions JSON (last 6 weeks):\n${JSON.stringify(compact)}`
-    );
-    const parsed = JSON.parse(result.response.text());
-    return NextResponse.json(parsed);
+    const parsed =
+      provider === "deepseek" ? await callDeepSeek(prompt) : await callGemini(prompt);
+    return NextResponse.json({ ...parsed, provider });
   } catch (e: any) {
-    console.error("[insights] failed:", e?.message);
-    return NextResponse.json({ error: e?.message || "ai_failed" }, { status: 500 });
+    console.error(`[insights/${provider}] failed:`, e?.message);
+    return NextResponse.json(
+      { error: e?.message || "ai_failed", provider },
+      { status: 500 }
+    );
   }
 }

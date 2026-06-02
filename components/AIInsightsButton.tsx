@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, X, Loader2 } from "lucide-react";
 
 type Card = {
@@ -14,7 +14,10 @@ type Card = {
 type Result = {
   summary: string;
   cards: Card[];
+  provider?: "gemini" | "deepseek";
 };
+
+type Provider = "gemini" | "deepseek";
 
 const LANGS = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -22,12 +25,33 @@ const LANGS = [
   { code: "th", label: "ไทย", flag: "🇹🇭" },
 ] as const;
 
+const PROVIDERS: { code: Provider; label: string; sub: string }[] = [
+  { code: "gemini", label: "Gemini", sub: "Google · 2.5 Flash" },
+  { code: "deepseek", label: "DeepSeek", sub: "V3.x · chat" },
+];
+
 export function AIInsightsButton() {
   const [open, setOpen] = useState(false);
   const [lang, setLang] = useState<"en" | "my" | "th" | null>(null);
+  const [provider, setProvider] = useState<Provider>("gemini");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  // Remember last-used provider across sessions
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ko_ai_provider");
+      if (saved === "deepseek" || saved === "gemini") setProvider(saved);
+    } catch {}
+  }, []);
+
+  function pickProvider(p: Provider) {
+    setProvider(p);
+    try {
+      localStorage.setItem("ko_ai_provider", p);
+    } catch {}
+  }
 
   async function analyze() {
     if (!lang) return;
@@ -37,7 +61,7 @@ export function AIInsightsButton() {
       const r = await fetch("/api/insights", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ language: lang }),
+        body: JSON.stringify({ language: lang, provider }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j?.error || "Failed");
@@ -91,7 +115,35 @@ export function AIInsightsButton() {
 
             {!result && !loading && (
               <>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
+                <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+                  Choose AI model:
+                </p>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {PROVIDERS.map((p) => (
+                    <button
+                      key={p.code}
+                      onClick={() => pickProvider(p.code)}
+                      className={`p-3 rounded-xl border text-left ${
+                        provider === p.code
+                          ? "border-brand-500 bg-brand-50 dark:bg-brand-900/30"
+                          : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <div
+                        className={`text-sm font-semibold ${
+                          provider === p.code ? "text-brand-700 dark:text-brand-300" : ""
+                        }`}
+                      >
+                        {p.label}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {p.sub}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
                   Pick the language for AI output:
                 </p>
                 <div className="grid grid-cols-3 gap-2 mb-5">
@@ -115,7 +167,7 @@ export function AIInsightsButton() {
                   disabled={!lang}
                   className="btn-primary w-full py-3"
                 >
-                  ✨ Analyze my spending
+                  ✨ Analyze with {provider === "deepseek" ? "DeepSeek" : "Gemini"}
                 </button>
               </>
             )}
