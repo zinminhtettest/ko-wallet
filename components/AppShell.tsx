@@ -73,7 +73,7 @@ export function AppShell({
   void workspaceName;
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#f8fafc] dark:bg-[#0b1220] md:bg-transparent md:dark:bg-transparent">
       {/* Sidebar (desktop) — sticky to viewport so utility pill stays visible */}
       <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-5 md:sticky md:top-0 md:h-screen md:flex-shrink-0 md:self-start">
         {/* Top row — Workspace switcher (Ko Wallet · {wallet name}) + bell */}
