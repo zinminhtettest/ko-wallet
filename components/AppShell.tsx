@@ -114,19 +114,17 @@ export function AppShell({
       {/* Main */}
       <main className="flex-1 min-w-0">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 grid place-items-center text-white">
-              <Wallet className="w-4 h-4" />
-            </div>
-            <span className="font-semibold">Ko Wallet</span>
+        <header className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-slate-200 bg-white">
+          <div className="flex-1 min-w-0">
+            <WorkspaceSwitcher activeId={activeWorkspaceId} />
           </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell className="w-9 h-9" />
-            <Link href="/transactions/new" className="btn-primary py-1.5 px-3 text-xs">
-              <Plus className="w-3.5 h-3.5" /> Add
-            </Link>
-          </div>
+          <NotificationBell className="w-9 h-9 flex-shrink-0" />
+          <Link
+            href="/transactions/new"
+            className="btn-primary py-1.5 px-3 text-xs flex-shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add
+          </Link>
         </header>
 
         <div className="px-4 py-5 md:px-8 md:py-8 pb-24 md:pb-8">{children}</div>
