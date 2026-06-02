@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, Mail, Wallet, Tag } from "lucide-react";
+import { Users, Mail, Wallet, Tag, Repeat, PieChart, MessageCircle } from "lucide-react";
 import { getActiveWorkspace } from "@/lib/workspace";
 
 export default async function SettingsPage() {
@@ -40,6 +40,39 @@ export default async function SettingsPage() {
         <div className="flex-1">
           <div className="font-semibold">Categories</div>
           <div className="text-sm text-slate-500">Add, edit, or delete custom categories</div>
+        </div>
+        <div className="text-slate-400">→</div>
+      </Link>
+
+      <Link href="/settings/budgets" className="card p-5 flex items-center gap-4 hover:bg-slate-50">
+        <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 grid place-items-center">
+          <PieChart className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold">Budgets</div>
+          <div className="text-sm text-slate-500">Set monthly limits per category + alerts</div>
+        </div>
+        <div className="text-slate-400">→</div>
+      </Link>
+
+      <Link href="/settings/recurring" className="card p-5 flex items-center gap-4 hover:bg-slate-50">
+        <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 grid place-items-center">
+          <Repeat className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold">Recurring Transactions</div>
+          <div className="text-sm text-slate-500">Subscriptions, rent, salary — auto-create on schedule</div>
+        </div>
+        <div className="text-slate-400">→</div>
+      </Link>
+
+      <Link href="/settings/telegram" className="card p-5 flex items-center gap-4 hover:bg-slate-50">
+        <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 grid place-items-center">
+          <MessageCircle className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold">Telegram Bot</div>
+          <div className="text-sm text-slate-500">Add transactions and get alerts via Telegram</div>
         </div>
         <div className="text-slate-400">→</div>
       </Link>

@@ -16,28 +16,45 @@ type Existing = {
   occurred_at: string;
 };
 
+type Prefill = {
+  amount?: string;
+  currency?: string;
+  merchant?: string;
+  note?: string;
+  occurred_at?: string;
+  category_id?: string;
+};
+
 export function TransactionForm({
   workspaceId,
   categories,
   defaultCurrency,
   existing,
+  prefill,
 }: {
   workspaceId: string;
   categories: Category[];
   defaultCurrency: Currency;
   existing?: Existing;
+  prefill?: Prefill;
 }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [kind, setKind] = useState<TxKind>((existing?.kind as TxKind) || "expense");
-  const [amount, setAmount] = useState<string>(existing ? String(existing.amount) : "");
-  const [currency, setCurrency] = useState<Currency>((existing?.currency as Currency) || defaultCurrency);
-  const [categoryId, setCategoryId] = useState<string>(existing?.category_id || "");
-  const [merchant, setMerchant] = useState(existing?.merchant || "");
-  const [note, setNote] = useState(existing?.note || "");
+  const [amount, setAmount] = useState<string>(
+    existing ? String(existing.amount) : prefill?.amount || ""
+  );
+  const [currency, setCurrency] = useState<Currency>(
+    (existing?.currency as Currency) || (prefill?.currency as Currency) || defaultCurrency
+  );
+  const [categoryId, setCategoryId] = useState<string>(
+    existing?.category_id || prefill?.category_id || ""
+  );
+  const [merchant, setMerchant] = useState(existing?.merchant || prefill?.merchant || "");
+  const [note, setNote] = useState(existing?.note || prefill?.note || "");
   const [occurredAt, setOccurredAt] = useState(
-    (existing?.occurred_at || new Date().toISOString()).slice(0, 16)
+    (existing?.occurred_at || prefill?.occurred_at || new Date().toISOString()).slice(0, 16)
   );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -74,6 +91,8 @@ export function TransactionForm({
       : supabase.from("transactions").insert(row);
     const { error } = await op;
     if (error) { setErr(error.message); setSaving(false); return; }
+    // Fire-and-forget: check budgets, surface alert in-app via notifications.
+    try { fetch("/api/budgets/check", { method: "POST" }); } catch {}
     router.push("/transactions");
     router.refresh();
   }

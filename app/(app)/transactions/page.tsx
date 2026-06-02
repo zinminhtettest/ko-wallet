@@ -4,7 +4,7 @@ import { formatMoney, formatDate } from "@/lib/utils";
 import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
 import Link from "next/link";
-import { Plus, Mail } from "lucide-react";
+import { Plus, Mail, Download } from "lucide-react";
 
 export default async function TransactionsPage({
   searchParams,
@@ -59,9 +59,24 @@ export default async function TransactionsPage({
             {list.length} records · {range.label}
           </p>
         </div>
-        <Link href="/transactions/new" className="btn-primary">
-          <Plus className="w-4 h-4" /> Add
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href={`/api/export?${new URLSearchParams({
+              ...(searchParams.preset ? { preset: searchParams.preset } : {}),
+              ...(searchParams.from ? { from: searchParams.from } : {}),
+              ...(searchParams.to ? { to: searchParams.to } : {}),
+              ...(searchParams.kind ? { kind: searchParams.kind } : {}),
+              ...(searchParams.currency ? { currency: searchParams.currency } : {}),
+            }).toString()}`}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+            title="Export CSV (Excel-friendly)"
+          >
+            <Download className="w-4 h-4" /> Export
+          </a>
+          <Link href="/transactions/new" className="btn-primary">
+            <Plus className="w-4 h-4" /> Add
+          </Link>
+        </div>
       </div>
 
       <DateRangeFilter />
