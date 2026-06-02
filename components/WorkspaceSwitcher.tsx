@@ -141,10 +141,8 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
           <Wallet className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold leading-tight text-slate-900 dark:text-white truncate">{activeName}</div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-            {active?.default_currency || "Wallet"} · {active?.role || ""}
-          </div>
+          <div className="font-semibold leading-tight text-slate-900 dark:text-white truncate">Ko Wallet</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{activeName}</div>
         </div>
         <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
       </button>
