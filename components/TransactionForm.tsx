@@ -112,14 +112,35 @@ export function TransactionForm({
     // Try the full insert/update; if the database is missing optional columns
     // (user hasn't run all SQL migrations yet) we strip them and retry so the
     // user can still save the transaction.
-    const OPTIONAL_COLS = ["tax_deductible", "created_by_name", "telegram_username", "tags"];
+    const OPTIONAL_COLS = [
+      "tax_deductible",
+      "created_by_name",
+      "telegram_username",
+      "tags",
+    ];
     async function trySave(payload: any) {
       return existing
         ? supabase.from("transactions").update(payload).eq("id", existing.id)
         : supabase.from("transactions").insert(payload);
     }
+    function looksLikeMissingColumn(message: string | undefined): boolean {
+      if (!message) return false;
+      const m = message.toLowerCase();
+      // Supabase / PostgREST returns variants like:
+      //   "Could not find the 'created_by_name' column of 'transactions' in the schema cache"
+      //   "column \"tax_deductible\" of relation \"transactions\" does not exist"
+      //   "Could not find column 'tags'..."
+      if (m.includes("schema cache")) return true;
+      if (m.includes("could not find")) return true;
+      if (m.includes("does not exist")) return true;
+      for (const col of OPTIONAL_COLS) {
+        if (m.includes(col.toLowerCase())) return true;
+      }
+      return false;
+    }
+
     let res = await trySave(row);
-    if (res.error && /column .* (does not exist|created_by_name|tax_deductible|telegram_username|tags)/i.test(res.error.message)) {
+    if (res.error && looksLikeMissingColumn(res.error.message)) {
       const stripped: any = { ...row };
       for (const k of OPTIONAL_COLS) delete stripped[k];
       res = await trySave(stripped);
