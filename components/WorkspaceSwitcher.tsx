@@ -135,14 +135,16 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-100 text-left"
+        className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-left"
       >
         <div className="w-9 h-9 rounded-lg bg-brand-600 grid place-items-center text-white flex-shrink-0">
           <Wallet className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold leading-tight">Ko Wallet</div>
-          <div className="text-xs text-slate-500 truncate">{activeName}</div>
+          <div className="font-semibold leading-tight text-slate-900 dark:text-white truncate">{activeName}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            {active?.default_currency || "Wallet"} · {active?.role || ""}
+          </div>
         </div>
         <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
       </button>

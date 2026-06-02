@@ -74,30 +74,19 @@ export function AppShell({
 
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar (desktop) */}
-      <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-5">
-        {/* Top brand row — logo + name + notification bell */}
+      {/* Sidebar (desktop) — sticky to viewport so utility pill stays visible */}
+      <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-5 md:sticky md:top-0 md:h-screen md:flex-shrink-0">
+        {/* Top row — Workspace switcher (Ko Wallet · {wallet name}) + bell */}
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-600 text-white grid place-items-center flex-shrink-0">
-            <Wallet className="w-4 h-4" />
-          </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-slate-900 dark:text-white leading-tight truncate">
-              Ko Wallet
-            </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-              Family money tracker
-            </div>
+            <WorkspaceSwitcher activeId={activeWorkspaceId} />
           </div>
-          <NotificationBell className="w-8 h-8 flex-shrink-0" />
+          <NotificationBell className="w-9 h-9 flex-shrink-0" />
         </div>
-
-        {/* Workspace switcher gets the full row */}
-        <WorkspaceSwitcher activeId={activeWorkspaceId} />
 
         <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
 
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
           {nav.map((n) => {
             const active = pathname === n.href || pathname?.startsWith(n.href + "/");
             const Icon = n.icon;
