@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
-import { Wallet, Lock, Check, ArrowUpRight, ArrowDownRight, LayoutGrid, X, Plus } from "lucide-react";
+import { Wallet, Lock, Check, ArrowUpRight, ArrowDownRight, LayoutGrid, X, Plus, PlusCircle } from "lucide-react";
 import { formatMoney, cn } from "@/lib/utils";
 
 export type WalletCardData = {
@@ -143,6 +143,14 @@ export function WalletPickerRow({
             </div>
           </Link>
         </div>
+
+        {/* Mobile-only Add Transaction button inside active wallet card */}
+        <Link
+          href="/transactions/new"
+          className="md:hidden mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 border-[1.5px] border-white/40 text-white font-semibold py-2.5 text-sm transition"
+        >
+          <PlusCircle className="w-4 h-4" /> Add Transaction
+        </Link>
       </div>
 
       {/* Other wallets — mobile: horizontal scroll showing all; desktop: top 2 + "+N more" */}
