@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { ReportsCharts } from "@/components/ReportsCharts";
+import { SpendingHeatmap } from "@/components/SpendingHeatmap";
+import Link from "next/link";
+import { FileText } from "lucide-react";
 
 export default async function ReportsPage() {
   const ctx = await getActiveWorkspace();
@@ -19,13 +22,38 @@ export default async function ReportsPage() {
     .gte("occurred_at", since.toISOString())
     .order("occurred_at", { ascending: false });
 
+  const list = (txs ?? []) as any[];
+
+  // 12-week range for heatmap
+  const heatmapSince = new Date();
+  heatmapSince.setDate(heatmapSince.getDate() - 83);
+  const recent = list.filter((t) => new Date(t.occurred_at) >= heatmapSince);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Reports</h1>
-        <p className="text-sm text-slate-500">Last 6 months overview</p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Reports</h1>
+          <p className="text-sm text-slate-500">Last 6 months overview</p>
+        </div>
+        <Link
+          href="/reports/print"
+          target="_blank"
+          className="btn-secondary text-sm"
+        >
+          <FileText className="w-4 h-4" /> Printable Report (PDF)
+        </Link>
       </div>
-      <ReportsCharts transactions={(txs ?? []) as any} />
+
+      <ReportsCharts transactions={list as any} />
+
+      <div className="card p-5">
+        <h3 className="font-semibold mb-3">📅 Spending Heatmap</h3>
+        <SpendingHeatmap
+          transactions={recent}
+          currency={ctx.workspace.default_currency}
+        />
+      </div>
     </div>
   );
 }

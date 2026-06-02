@@ -3,8 +3,9 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { formatMoney, formatDate } from "@/lib/utils";
 import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { convert } from "@/lib/fx";
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, Plus, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Plus, Wallet, Globe } from "lucide-react";
 import type { Currency } from "@/lib/types";
 
 export default async function DashboardPage({
@@ -16,6 +17,18 @@ export default async function DashboardPage({
   if (!ctx) return null;
   const supabase = createClient();
   const range = parseRangeFromSearchParams(searchParams);
+
+  // Load FX user settings for combined net worth
+  const { data: settings } = await supabase
+    .from("user_settings")
+    .select("*")
+    .eq("user_id", ctx.user.id)
+    .maybeSingle();
+  const baseCurrency = settings?.base_currency || "THB";
+  const rates = {
+    rate_thb_to_mmk: Number(settings?.rate_thb_to_mmk ?? 130),
+    rate_thb_to_usd: Number(settings?.rate_thb_to_usd ?? 0.028),
+  };
 
   const { data: txs } = await supabase
     .from("transactions")
@@ -43,6 +56,18 @@ export default async function DashboardPage({
 
   const recent = all.slice(0, 8);
 
+  // Net worth combined: convert net of every currency to base
+  let combinedNet = 0;
+  let combinedIncome = 0;
+  let combinedExpense = 0;
+  for (const c of ["THB", "MMK", "USD"] as Currency[]) {
+    const v = byCurrency[c];
+    if (!v) continue;
+    combinedIncome += convert(v.income, c, baseCurrency, rates);
+    combinedExpense += convert(v.expense, c, baseCurrency, rates);
+  }
+  combinedNet = combinedIncome - combinedExpense;
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-3">
@@ -58,6 +83,32 @@ export default async function DashboardPage({
       </div>
 
       <DateRangeFilter />
+
+      {/* Net Worth combined card */}
+      <div className="card p-5 bg-gradient-to-br from-brand-50 to-white dark:from-slate-900 dark:to-slate-950">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="w-4 h-4 text-brand-600" />
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Net Worth ({baseCurrency})
+              </span>
+            </div>
+            <div className={`text-3xl font-bold ${combinedNet >= 0 ? "text-slate-900 dark:text-slate-100" : "text-red-600"}`}>
+              {formatMoney(combinedNet, baseCurrency)}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              All currencies combined · {range.label}
+            </div>
+          </div>
+          <Link
+            href="/settings/currency"
+            className="text-xs text-brand-600 hover:underline whitespace-nowrap"
+          >
+            FX rates →
+          </Link>
+        </div>
+      </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {(Object.keys(byCurrency) as Currency[]).map((c) => {
