@@ -12,41 +12,64 @@ const LANG_LABEL: Record<string, string> = {
 };
 
 function buildPrompt(language: string, wsName: string, defaultCurrency: string) {
-  return `You are a personal-finance AI advisor for the wallet "${wsName}".
-The user wants insights for the LAST 6 WEEKS of their transactions.
+  return `You are a careful personal-finance AI advisor for the wallet "${wsName}".
+The user wants ACCURATE insights for the LAST 6 WEEKS of their transactions.
 
-Return ONLY a single JSON object (no markdown, no commentary) in this schema:
+═══ ACCURACY REQUIREMENTS (CRITICAL) ═══
+1. Before writing anything, compute these totals from the raw data:
+   - total_income (sum of all kind="income")
+   - total_expense (sum of all kind="expense")
+   - net = total_income − total_expense
+   - per-category expense sums (group by "cat")
+   - per-merchant expense sums (group by "m")
+2. Every number you mention MUST match these computed totals exactly.
+3. Do NOT invent transactions, categories, or merchants that aren't in the data.
+4. Round to whole currency units; never invent decimals.
+
+═══ ESSENTIAL vs WASTE CLASSIFICATION ═══
+Classify EVERY expense as one of:
+- "essential" (လိုအပ်တာ): food groceries, rent, bills, transport-to-work, healthcare, education, basic utilities
+- "discretionary" (လိုလားတာ): dining out moderately, hobbies, modest entertainment, gifts
+- "waste" (အဖြုန်း): excessive dining/coffee, impulse shopping, unused subscriptions, splurges, anything the user is unlikely to repeat or value
+
+Then compute:
+- essential_total, discretionary_total, waste_total (sums in ${defaultCurrency})
+- waste_pct = waste_total / total_expense × 100
+
+═══ OUTPUT (ONLY this JSON, no markdown) ═══
 {
-  "summary": "1-2 sentence executive summary",
+  "summary": "1-2 sentence honest assessment with the exact net figure",
   "cards": [
     {
-      "icon": "💸" | "💰" | "📊" | "⚠️" | "✅" | "🎯" | "🍔" | "🚗" | "📈" | "📉",
-      "title": "string (short bold title)",
-      "value": "string (the headline number/fact)",
-      "body": "string (1-2 sentence explanation)",
-      "recommendation": "string (concrete action to take)",
+      "icon": "💸" | "💰" | "📊" | "⚠️" | "✅" | "🎯" | "🍔" | "🚗" | "📈" | "📉" | "🛒" | "🏠",
+      "title": "string",
+      "value": "string with the exact number",
+      "body": "1-2 sentence explanation citing real categories/merchants from the data",
+      "recommendation": "concrete action with an estimated saving in ${defaultCurrency}",
       "tone": "positive" | "warning" | "info"
     }
   ]
 }
 
-REQUIRED CARDS (aim for 5-7 cards total):
-1. Top spending category — what category dominates and by how much
-2. Spending trend — is this week up or down vs the average of the prior 5 weeks (give %)
-3. Top merchant — single merchant the user spends most at
-4. Savings rate / net flow — income vs expense, surplus or deficit
-5. Unusual pattern — any single transaction or category that's surprisingly large
-6. Recommendation — concrete savings tip personalized to their data
-7. Optional: an "achievement" card if income > expense or if they've reduced a category
+═══ REQUIRED CARDS (6–8 cards total, in this order) ═══
+1. Net flow — income vs expense, surplus or deficit (exact ${defaultCurrency} figures)
+2. Essential vs Waste split — show essential_total, discretionary_total, waste_total, and waste_pct%
+3. Top spending category — name + amount + % of total_expense
+4. Top merchant — name + how many visits + total spent
+5. Biggest waste item — single category or merchant flagged as wasteful, with why
+6. Trend — last 1 week vs avg of prior 5 weeks (% change), is it improving or worsening
+7. Recommendation — ONE specific, actionable change with estimated monthly saving
+8. Optional Achievement (only if income > expense OR waste_pct < 15%)
 
-LANGUAGE: Write ALL "title", "value", "body", "recommendation", "summary" fields in <b>${LANG_LABEL[language] || "English"}</b>.
-- For Burmese, write naturally in Myanmar Unicode mixed with English numbers/terms where natural.
-- For Thai, write in Thai script with comma-separated numbers.
-- For English, casual but informative.
+═══ LANGUAGE ═══
+Write ALL string fields in <b>${LANG_LABEL[language] || "English"}</b>.
+- Burmese: Myanmar Unicode, mix English for numbers/categories where natural.
+- Thai: Thai script, comma-separated numbers.
+- English: casual but precise.
 
-CURRENCY: Default is ${defaultCurrency}. Round large numbers (e.g. 2,540 not 2540.00). Mix currencies if user has multiple.
+CURRENCY: Default ${defaultCurrency}. Use comma separators (e.g. 2,540). If multiple currencies appear, report each separately — do NOT mix them in one total.
 
-Be specific to the data — don't write generic platitudes. Cite real category/merchant names from the data.`;
+Be specific. Cite real names. No platitudes. Numbers MUST match the data.`;
 }
 
 async function callGemini(prompt: string) {
@@ -54,12 +77,12 @@ async function callGemini(prompt: string) {
     throw new Error("Gemini API key not configured (GEMINI_API_KEY)");
   }
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  // gemini-2.5-flash = latest free-tier model with best price/quality
+  // gemini-3.1-flash-lite = current GA model, cheapest with strong quality
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.1-flash-lite",
     generationConfig: {
       responseMimeType: "application/json",
-      temperature: 0.3,
+      temperature: 0.2,
     },
   });
   const result = await model.generateContent(prompt);
@@ -78,17 +101,17 @@ async function callDeepSeek(prompt: string) {
       Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "deepseek-chat",
+      model: "deepseek-v4-pro",
       messages: [
         {
           role: "system",
           content:
-            "You are a personal-finance AI. Respond ONLY with a single valid JSON object matching the requested schema. No markdown fences, no commentary.",
+            "You are a careful personal-finance AI. Always compute totals from the raw data first, then write. Respond ONLY with a single valid JSON object matching the requested schema. Every number must match the data exactly. No markdown fences, no commentary.",
         },
         { role: "user", content: prompt },
       ],
       response_format: { type: "json_object" },
-      temperature: 0.3,
+      temperature: 0.2,
     }),
   });
   if (!res.ok) {
