@@ -9,7 +9,7 @@ import { TransactionRow } from "@/components/TransactionRow";
 import { WalletPickerRow, type WalletCardData } from "@/components/WalletPickerRow";
 import { convert } from "@/lib/fx";
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, Plus, Wallet, Globe } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Currency } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +17,12 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { preset?: string; from?: string; to?: string };
+  searchParams: { preset?: string; from?: string; to?: string; kind?: string };
 }) {
+  const kindFilter: "income" | "expense" | null =
+    searchParams.kind === "income" || searchParams.kind === "expense"
+      ? (searchParams.kind as "income" | "expense")
+      : null;
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
   const supabase = createClient();
@@ -76,7 +80,10 @@ export default async function DashboardPage({
     else byCurrency[c].expense += Number(t.amount);
   }
 
-  const recent = all.slice(0, 8);
+  const filteredAll = kindFilter
+    ? all.filter((t) => t.kind === kindFilter)
+    : all;
+  const recent = filteredAll.slice(0, 8);
 
   // --- Wallet picker row data: per-wallet net/income/expense in each wallet's default currency ---
   type WsRow = {
@@ -129,17 +136,6 @@ export default async function DashboardPage({
     });
   }
 
-  // Net worth combined: convert net of every currency to base
-  let combinedNet = 0;
-  let combinedIncome = 0;
-  let combinedExpense = 0;
-  for (const c of ["THB", "MMK", "USD"] as Currency[]) {
-    const v = byCurrency[c];
-    if (!v) continue;
-    combinedIncome += convert(v.income, c, baseCurrency, rates);
-    combinedExpense += convert(v.expense, c, baseCurrency, rates);
-  }
-  combinedNet = combinedIncome - combinedExpense;
 
   return (
     <div className="space-y-6">
@@ -159,68 +155,34 @@ export default async function DashboardPage({
 
       <WalletPickerRow wallets={walletCards} activeId={ctx.workspace.id} />
 
-      {/* Net Worth combined card */}
-      <div className="card p-5 bg-gradient-to-br from-brand-50 to-white dark:from-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Globe className="w-4 h-4 text-brand-600" />
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Net Worth ({baseCurrency})
-              </span>
-            </div>
-            <div className={`text-3xl font-bold ${combinedNet >= 0 ? "text-slate-900 dark:text-slate-100" : "text-red-600"}`}>
-              {formatMoney(combinedNet, baseCurrency)}
-            </div>
-            <div className="text-xs text-slate-500 mt-1">
-              All currencies combined · {range.label}
-            </div>
-          </div>
-          <Link
-            href="/settings/currency"
-            className="text-xs text-brand-600 hover:underline whitespace-nowrap"
-          >
-            FX rates →
-          </Link>
-        </div>
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {(Object.keys(byCurrency) as Currency[]).map((c) => {
-          const { income, expense } = byCurrency[c];
-          if (income === 0 && expense === 0 && c !== ctx.workspace.default_currency) return null;
-          const balance = income - expense;
-          return (
-            <div key={c} className="card p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Wallet className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-semibold text-slate-700">{c} Balance</span>
-              </div>
-              <div className={`text-3xl font-bold ${balance >= 0 ? "text-slate-900" : "text-red-600"}`}>
-                {formatMoney(balance, c)}
-              </div>
-              <div className="grid grid-cols-2 gap-2 mt-4">
-                <div className="rounded-lg bg-green-50 dark:bg-green-900/30 p-2.5">
-                  <div className="flex items-center gap-1 text-xs text-green-700">
-                    <ArrowUpRight className="w-3 h-3" /> Income
-                  </div>
-                  <div className="font-semibold text-green-700">{formatMoney(income, c)}</div>
-                </div>
-                <div className="rounded-lg bg-red-50 dark:bg-red-900/30 p-2.5">
-                  <div className="flex items-center gap-1 text-xs text-red-700">
-                    <ArrowDownRight className="w-3 h-3" /> Expense
-                  </div>
-                  <div className="font-semibold text-red-700">{formatMoney(expense, c)}</div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       <div className="card">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
-          <h2 className="font-semibold">Recent Transactions</h2>
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="font-semibold">Recent Transactions</h2>
+            {kindFilter && (
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  kindFilter === "income"
+                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                    : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                }`}
+              >
+                {kindFilter === "income" ? "Income only" : "Expense only"}
+              </span>
+            )}
+            {kindFilter && (
+              <Link
+                href={`?${new URLSearchParams({
+                  ...(searchParams.preset ? { preset: searchParams.preset } : {}),
+                  ...(searchParams.from ? { from: searchParams.from } : {}),
+                  ...(searchParams.to ? { to: searchParams.to } : {}),
+                }).toString()}`}
+                className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline"
+              >
+                Clear
+              </Link>
+            )}
+          </div>
           <Link href="/transactions" className="text-sm text-brand-600 hover:underline">
             View all
           </Link>
