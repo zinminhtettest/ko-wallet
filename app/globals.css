@@ -23,6 +23,24 @@ html.dark {
 html { background: var(--bg); color: var(--fg); }
 body { background: var(--bg); color: var(--fg); }
 
+/* Mobile/PWA: paint the iPhone home-indicator safe-area below the bottom nav
+   with the nav's background color so it looks continuous instead of showing
+   the page bg (or black) under the bar. */
+@media (max-width: 767px) {
+  body::after {
+    content: "";
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-bottom);
+    background: #ffffff;
+    z-index: 30;
+    pointer-events: none;
+  }
+  html.dark body::after { background: #0f172a; }
+}
+
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
