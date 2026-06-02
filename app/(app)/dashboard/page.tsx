@@ -3,6 +3,7 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { formatMoney, formatDate } from "@/lib/utils";
 import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { AIInsightsButton } from "@/components/AIInsightsButton";
 import { convert } from "@/lib/fx";
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Plus, Wallet, Globe } from "lucide-react";
@@ -183,6 +184,8 @@ export default async function DashboardPage({
           </ul>
         )}
       </div>
+
+      <AIInsightsButton />
     </div>
   );
 }
