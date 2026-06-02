@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { tgSendMessage } from "@/lib/telegram";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { parseJsonText } from "@/lib/ai-text";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 30;
@@ -740,20 +741,9 @@ async function parseAudioWithGemini(
 }
 
 async function parseNaturalLanguage(text: string): Promise<any | null> {
-  try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.1,
-      },
-    });
-    const result = await model.generateContent(`${NL_PROMPT}\n\nUser message: """${text.slice(0, 600)}"""`);
-    const out = result.response.text();
-    return JSON.parse(out);
-  } catch (e: any) {
-    console.error("[telegram] NL parse failed:", e?.message);
-    return null;
-  }
+  // Uses Gemini primary + DeepSeek fallback so Telegram text commands keep
+  // working when Gemini quota is exhausted.
+  return parseJsonText(
+    `${NL_PROMPT}\n\nUser message: """${text.slice(0, 600)}"""`
+  );
 }
