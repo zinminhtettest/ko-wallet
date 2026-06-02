@@ -5,6 +5,15 @@ import { createClient } from "@/lib/supabase/client";
 import { Category, Currency, TxKind } from "@/lib/types";
 import { Trash2 } from "lucide-react";
 
+// Convert a stored ISO timestamp (UTC) to the "YYYY-MM-DDTHH:mm" format that
+// <input type="datetime-local"> expects in the BROWSER'S local timezone.
+function toLocalDatetimeInput(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso.slice(0, 16);
+  const offsetMs = d.getTimezoneOffset() * 60_000;
+  return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
 type Existing = {
   id: string;
   amount: number;
@@ -54,7 +63,7 @@ export function TransactionForm({
   const [merchant, setMerchant] = useState(existing?.merchant || prefill?.merchant || "");
   const [note, setNote] = useState(existing?.note || prefill?.note || "");
   const [occurredAt, setOccurredAt] = useState(
-    (existing?.occurred_at || prefill?.occurred_at || new Date().toISOString()).slice(0, 16)
+    toLocalDatetimeInput(existing?.occurred_at || prefill?.occurred_at || new Date().toISOString())
   );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
