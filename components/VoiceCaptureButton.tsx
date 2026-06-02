@@ -92,15 +92,15 @@ export function VoiceCaptureButton({
       >
         {busy ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" /> AI ဆီ ပို့နေပါတယ်...
+            <Loader2 className="w-4 h-4 animate-spin" /> Sending to AI...
           </>
         ) : recording ? (
           <>
-            <Square className="w-4 h-4" /> Stop & Use
+            <Square className="w-4 h-4" /> Stop &amp; Use
           </>
         ) : (
           <>
-            <Mic className="w-4 h-4" /> 🎤 ပြောပြီး auto-fill (Voice)
+            <Mic className="w-4 h-4" /> Speak to auto-fill
           </>
         )}
       </button>

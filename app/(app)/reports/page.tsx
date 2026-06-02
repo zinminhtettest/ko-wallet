@@ -5,6 +5,8 @@ import { SpendingHeatmap } from "@/components/SpendingHeatmap";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReportsPage() {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;

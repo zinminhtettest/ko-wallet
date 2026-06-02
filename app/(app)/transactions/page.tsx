@@ -7,6 +7,8 @@ import { TransactionRow } from "@/components/TransactionRow";
 import Link from "next/link";
 import { Plus, Download, Users, Upload } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function TransactionsPage({
   searchParams,
 }: {
@@ -167,7 +169,7 @@ export default async function TransactionsPage({
       <div className="card overflow-hidden">
         {list.length === 0 ? (
           <div className="p-10 text-center text-slate-500">
-            <p className="mb-3">ဒီ range မှာ transaction မရှိပါ။</p>
+            <p className="mb-3">No transactions in this range.</p>
             <Link href="/transactions/new" className="btn-primary">
               <Plus className="w-4 h-4" /> Add Transaction
             </Link>

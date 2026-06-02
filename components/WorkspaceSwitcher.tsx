@@ -26,12 +26,39 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Cache the workspace list per browser session so we don't refetch on every
+    // remount / nav prefetch (multiple WorkspaceSwitcher instances + Transfer
+    // page all hit the same RPC). 30-second TTL is enough to feel fresh.
+    const CACHE_KEY = "ko_ws_cache_v1";
+    const TTL_MS = 30_000;
     let cancelled = false;
+
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (cached?.ts && Date.now() - cached.ts < TTL_MS && Array.isArray(cached.data)) {
+          setWorkspaces(cached.data);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch {}
+
     (async () => {
       setLoading(true);
       const { data, error } = await supabase.rpc("list_my_workspaces");
       if (cancelled) return;
-      if (!error && data) setWorkspaces(data as WorkspaceRow[]);
+      if (!error && data) {
+        const rows = data as WorkspaceRow[];
+        setWorkspaces(rows);
+        try {
+          sessionStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ ts: Date.now(), data: rows })
+          );
+        } catch {}
+      }
       setLoading(false);
     })();
     return () => {
@@ -71,6 +98,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error || "Switch failed");
       }
+      try { sessionStorage.removeItem("ko_ws_cache_v1"); } catch {}
       window.location.href = "/dashboard";
     } catch (e: any) {
       setErr(e.message);
@@ -94,6 +122,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j?.error || "Create failed");
+      try { sessionStorage.removeItem("ko_ws_cache_v1"); } catch {}
       window.location.href = "/dashboard";
     } catch (e: any) {
       setErr(e.message);

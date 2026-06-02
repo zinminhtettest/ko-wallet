@@ -9,6 +9,8 @@ import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Plus, Wallet, Globe } from "lucide-react";
 import type { Currency } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage({
   searchParams,
 }: {

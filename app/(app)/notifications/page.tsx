@@ -22,7 +22,7 @@ export default async function NotificationsPage() {
       <div>
         <h1 className="text-2xl font-bold">Notifications</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Workspace activity + invites — latest 30 ခု ပြထားတယ်။
+          Workspace activity + invites — latest 30.
         </p>
       </div>
       <NotificationsList initial={(data || []) as NotificationItem[]} />

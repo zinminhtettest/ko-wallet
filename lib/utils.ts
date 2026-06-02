@@ -11,20 +11,39 @@ export const CURRENCY_SYMBOL: Record<string, string> = {
   USD: "$",
 };
 
+// Currency / date formatters MUST be timezone-deterministic to avoid React
+// hydration mismatches. We force UTC + a fixed locale so the server and the
+// client produce byte-identical strings for the same input.
+
 export function formatMoney(amount: number, currency: string = "THB") {
   const sym = CURRENCY_SYMBOL[currency] ?? currency;
-  return `${sym}${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)}`;
+  return `${sym}${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)}`;
 }
+
+const MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 export function formatDate(d: string | Date) {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  if (isNaN(date.getTime())) return "";
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = MONTHS_SHORT[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 export function formatDateTime(d: string | Date) {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleString("en-GB", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
+  if (isNaN(date.getTime())) return "";
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = MONTHS_SHORT[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+  const hh = String(date.getUTCHours()).padStart(2, "0");
+  const mm = String(date.getUTCMinutes()).padStart(2, "0");
+  return `${day} ${month} ${year}, ${hh}:${mm}`;
 }

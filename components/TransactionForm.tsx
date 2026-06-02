@@ -81,7 +81,7 @@ export function TransactionForm({
     setSaving(true);
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) {
-      setErr("Amount မှန်ကန်တဲ့ ဂဏန်း ထည့်ပါ");
+      setErr("Enter a valid amount");
       setSaving(false);
       return;
     }
@@ -121,7 +121,7 @@ export function TransactionForm({
 
   async function onDelete() {
     if (!existing) return;
-    if (!confirm("Delete လုပ်ချင်တာ သေချာလား?")) return;
+    if (!confirm("Delete this transaction?")) return;
     const { error } = await supabase.from("transactions").delete().eq("id", existing.id);
     if (error) { setErr(error.message); return; }
     router.push("/transactions");
@@ -161,7 +161,7 @@ export function TransactionForm({
               kind === k ? (k === "expense" ? "bg-red-500 text-white" : "bg-green-500 text-white") : "text-slate-600"
             }`}
           >
-            {k === "expense" ? "Expense (သုံး)" : "Income (ဝင်)"}
+            {k === "expense" ? "Expense" : "Income"}
           </button>
         ))}
       </div>
@@ -193,6 +193,20 @@ export function TransactionForm({
       <div>
         <label className="label">Category</label>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          <button
+            type="button"
+            onClick={() => setCategoryId("")}
+            className={`p-3 rounded-xl border text-sm flex flex-col items-center gap-1.5 ${
+              categoryId === ""
+                ? "border-brand-500 bg-brand-50 dark:bg-brand-900/30"
+                : "border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-700"
+            }`}
+          >
+            <div className="w-8 h-8 rounded-lg grid place-items-center text-white text-[10px] font-bold bg-slate-400">
+              —
+            </div>
+            <span className="text-xs">Uncategorized</span>
+          </button>
           {filteredCats.map((c) => {
             const isEmoji = !/^[a-z\-]+$/i.test(c.icon);
             return (

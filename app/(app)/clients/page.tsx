@@ -9,7 +9,7 @@ export default async function ClientsPage() {
       <div>
         <h1 className="text-2xl font-bold">Clients</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Track clients and outstanding invoices for your business wallets.
+          Track clients and outstanding invoices for your business wallets (mini-CRM).
         </p>
       </div>
       <ClientsManager defaultCurrency={ctx.workspace.default_currency} />

@@ -3,6 +3,8 @@ import { Users, Mail, Wallet, Tag, Repeat, PieChart, MessageCircle, ArrowRightLe
 import { getActiveWorkspace } from "@/lib/workspace";
 import { getServerT } from "@/lib/user-lang";
 
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage() {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
