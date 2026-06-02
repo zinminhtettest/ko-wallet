@@ -25,7 +25,7 @@ export default async function DashboardPage({
     .eq("workspace_id", ctx.workspace.id)
     .gte("occurred_at", range.from.toISOString())
     .lte("occurred_at", range.to.toISOString())
-    .order("occurred_at", { ascending: false });
+    .order("created_at", { ascending: false });
 
   const all = (txs ?? []) as any[];
 

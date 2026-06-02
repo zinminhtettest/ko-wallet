@@ -19,12 +19,12 @@ export default async function TransactionsPage({
   let q = supabase
     .from("transactions")
     .select(
-      "id, amount, currency, kind, note, merchant, occurred_at, source, category:categories(name, icon, color)"
+      "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, category:categories(name, icon, color)"
     )
     .eq("workspace_id", ctx.workspace.id)
     .gte("occurred_at", range.from.toISOString())
     .lte("occurred_at", range.to.toISOString())
-    .order("occurred_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(500);
 
   if (searchParams.kind === "expense" || searchParams.kind === "income") {
