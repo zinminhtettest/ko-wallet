@@ -27,41 +27,61 @@ export default async function TransactionsPage({
   const supabase = createClient();
   const range = parseRangeFromSearchParams(searchParams);
 
-  let q = supabase
-    .from("transactions")
-    .select(
-      "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, created_by_name, telegram_username, tax_deductible, category:categories(name, icon, color)"
-    )
-    .eq("workspace_id", ctx.workspace.id)
-    .gte("occurred_at", range.from.toISOString())
-    .lte("occurred_at", range.to.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(500);
+  // Build the query. We try the full column list first (including the newer
+  // attribution / tax columns) and fall back to the legacy column set if any
+  // of those columns don't exist yet (i.e. the user hasn't run all SQL
+  // migrations). This makes the page resilient instead of silently showing 0.
+  async function runQuery(columns: string) {
+    let q = supabase
+      .from("transactions")
+      .select(columns)
+      .eq("workspace_id", ctx!.workspace.id)
+      .gte("occurred_at", range.from.toISOString())
+      .lte("occurred_at", range.to.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(500);
 
-  if (searchParams.kind === "expense" || searchParams.kind === "income") {
-    q = q.eq("kind", searchParams.kind);
-  }
-  if (searchParams.currency) {
-    q = q.eq("currency", searchParams.currency);
-  }
-  if (searchParams.tax === "1") {
-    q = q.eq("tax_deductible", true);
-  }
-  if (searchParams.min) {
-    const min = parseFloat(searchParams.min);
-    if (!isNaN(min)) q = q.gte("amount", min);
-  }
-  if (searchParams.max) {
-    const max = parseFloat(searchParams.max);
-    if (!isNaN(max)) q = q.lte("amount", max);
-  }
-  if (searchParams.q) {
-    const term = searchParams.q.replace(/[%_]/g, "");
-    q = q.or(`merchant.ilike.%${term}%,note.ilike.%${term}%`);
+    if (searchParams.kind === "expense" || searchParams.kind === "income") {
+      q = q.eq("kind", searchParams.kind);
+    }
+    if (searchParams.currency) {
+      q = q.eq("currency", searchParams.currency);
+    }
+    // tax_deductible filter only applies if user explicitly chose it
+    if (searchParams.tax === "1" && columns.includes("tax_deductible")) {
+      q = q.eq("tax_deductible", true);
+    }
+    if (searchParams.min) {
+      const min = parseFloat(searchParams.min);
+      if (!isNaN(min)) q = q.gte("amount", min);
+    }
+    if (searchParams.max) {
+      const max = parseFloat(searchParams.max);
+      if (!isNaN(max)) q = q.lte("amount", max);
+    }
+    if (searchParams.q) {
+      const term = searchParams.q.replace(/[%_]/g, "");
+      q = q.or(`merchant.ilike.%${term}%,note.ilike.%${term}%`);
+    }
+    return q;
   }
 
-  const { data: txs } = await q;
-  const list = (txs ?? []) as any[];
+  const FULL_COLS =
+    "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, created_by_name, telegram_username, tax_deductible, category:categories(name, icon, color)";
+  const LEGACY_COLS =
+    "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, category:categories(name, icon, color)";
+
+  let { data: txs, error } = await runQuery(FULL_COLS);
+  let missingMigration = false;
+  if (error) {
+    console.warn("[transactions] full query failed, retrying legacy:", error.message);
+    missingMigration = true;
+    const retry = await runQuery(LEGACY_COLS);
+    txs = retry.data;
+    error = retry.error;
+  }
+  const list = ((txs as any) ?? []) as any[];
+  const fatalError = error;
 
   // Build URL helper that preserves date range
   const dateParams = new URLSearchParams();
@@ -128,6 +148,21 @@ export default async function TransactionsPage({
       </div>
 
       <TransactionFilters />
+
+      {missingMigration && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm p-3">
+          ⚠️ Some new columns aren't migrated yet. Showing legacy data. Run{" "}
+          <code className="bg-amber-100 px-1 rounded">sql/phase5_attribution.sql</code> and{" "}
+          <code className="bg-amber-100 px-1 rounded">sql/phase5_tags_goals.sql</code> in
+          Supabase SQL Editor.
+        </div>
+      )}
+
+      {fatalError && (
+        <div className="rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm p-3">
+          Query error: {fatalError.message}
+        </div>
+      )}
 
       <div className="card overflow-hidden">
         {list.length === 0 ? (
