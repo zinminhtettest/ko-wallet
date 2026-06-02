@@ -74,13 +74,14 @@ export function AppShell({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar (desktop) */}
-      <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 bg-white px-4 py-6">
-        <div className="mb-6 flex items-start gap-2">
-          <div className="flex-1 min-w-0">
-            <WorkspaceSwitcher activeId={activeWorkspaceId} />
-          </div>
-          <ThemeToggle className="mt-0.5" />
-          <NotificationBell className="w-9 h-9 mt-0.5" />
+      <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-5">
+        {/* Workspace switcher gets the full row */}
+        <WorkspaceSwitcher activeId={activeWorkspaceId} />
+
+        {/* Compact utility row beneath the switcher */}
+        <div className="flex items-center justify-end gap-1 mt-2 mb-4">
+          <ThemeToggle />
+          <NotificationBell className="w-9 h-9" />
         </div>
 
         <nav className="flex-1 space-y-1">
@@ -93,7 +94,9 @@ export function AppShell({
                 href={n.href}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
-                  active ? "bg-brand-50 text-brand-700" : "text-slate-700 hover:bg-slate-100"
+                  active
+                    ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"
+                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -103,10 +106,10 @@ export function AppShell({
           })}
         </nav>
 
-        <div className="border-t border-slate-200 pt-3 mt-3">
-          <div className="px-3 py-2 text-xs text-slate-500 truncate">{userEmail}</div>
+        <div className="border-t border-slate-200 dark:border-slate-800 pt-3 mt-3">
+          <div className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400 truncate">{userEmail}</div>
           <form action="/auth/signout" method="POST">
-            <button className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+            <button className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
               <LogOut className="w-4 h-4" /> Sign out
             </button>
           </form>
@@ -116,7 +119,7 @@ export function AppShell({
       {/* Main */}
       <main className="flex-1 min-w-0">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-slate-200 bg-white">
+        <header className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <div className="flex-1 min-w-0">
             <WorkspaceSwitcher activeId={activeWorkspaceId} />
           </div>
@@ -133,7 +136,7 @@ export function AppShell({
         <div className="px-4 py-5 md:px-8 md:py-8 pb-24 md:pb-8">{children}</div>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 grid grid-cols-4">
+        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 grid grid-cols-4">
           {nav.map((n) => {
             const active = pathname === n.href || pathname?.startsWith(n.href + "/");
             const Icon = n.icon;
