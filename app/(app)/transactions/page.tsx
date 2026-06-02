@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
-import { TransactionFilters } from "@/components/TransactionFilters";
 import { TransactionRow } from "@/components/TransactionRow";
 import Link from "next/link";
 import { Plus, Download, Users, Upload } from "lucide-react";
@@ -173,8 +172,6 @@ export default async function TransactionsPage({
         <FilterChip href={withKind("expense")} label="Expenses" active={searchParams.kind === "expense"} />
         <FilterChip href={withKind("income")} label="Income" active={searchParams.kind === "income"} />
       </div>
-
-      <TransactionFilters />
 
       {missingMigration && (
         <div className="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm p-3">
