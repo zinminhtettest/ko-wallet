@@ -20,18 +20,10 @@ html.dark {
   color-scheme: dark;
 }
 
-html, body { background: var(--bg); color: var(--fg); }
-body { min-height: 100vh; }
+html { background: var(--bg); color: var(--fg); }
+body { background: var(--bg); color: var(--fg); }
 
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-
-/* Mobile/PWA: force html + body bg to the bottom-nav color so the system
-   safe-area (iPhone home indicator / Android gesture bar) matches.
-   The page itself gets its own light-gray/dark surface via a wrapper. */
-@media (max-width: 767px) {
-  html, body { background: #ffffff; }
-  html.dark, html.dark body { background: #0f172a; }
-}
 
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar { display: none; }
