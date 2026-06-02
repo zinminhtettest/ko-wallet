@@ -1,29 +1,34 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { formatMoney, formatDate } from "@/lib/utils";
+import { parseRangeFromSearchParams } from "@/lib/date-range";
+import { DateRangeFilter } from "@/components/DateRangeFilter";
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Plus, Wallet } from "lucide-react";
 import type { Currency } from "@/lib/types";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { preset?: string; from?: string; to?: string };
+}) {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
   const supabase = createClient();
-
-  // Current month
-  const start = new Date();
-  start.setDate(1); start.setHours(0,0,0,0);
+  const range = parseRangeFromSearchParams(searchParams);
 
   const { data: txs } = await supabase
     .from("transactions")
-    .select("id, amount, currency, kind, note, merchant, occurred_at, category:categories(name, icon, color)")
+    .select(
+      "id, amount, currency, kind, note, merchant, occurred_at, category:categories(name, icon, color)"
+    )
     .eq("workspace_id", ctx.workspace.id)
-    .gte("occurred_at", start.toISOString())
+    .gte("occurred_at", range.from.toISOString())
+    .lte("occurred_at", range.to.toISOString())
     .order("occurred_at", { ascending: false });
 
   const all = (txs ?? []) as any[];
 
-  // Aggregate per currency
   const byCurrency: Record<Currency, { income: number; expense: number }> = {
     THB: { income: 0, expense: 0 },
     MMK: { income: 0, expense: 0 },
@@ -40,17 +45,20 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-slate-500">{formatDate(start)} — Today</p>
+          <p className="text-sm text-slate-500">
+            {range.label} · {formatDate(range.from)} → {formatDate(range.to)}
+          </p>
         </div>
         <Link href="/transactions/new" className="btn-primary hidden md:inline-flex">
           <Plus className="w-4 h-4" /> Add Transaction
         </Link>
       </div>
 
-      {/* KPI cards per currency */}
+      <DateRangeFilter />
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {(Object.keys(byCurrency) as Currency[]).map((c) => {
           const { income, expense } = byCurrency[c];
@@ -84,7 +92,6 @@ export default async function DashboardPage() {
         })}
       </div>
 
-      {/* Recent transactions */}
       <div className="card">
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <h2 className="font-semibold">Recent Transactions</h2>
@@ -94,9 +101,9 @@ export default async function DashboardPage() {
         </div>
         {recent.length === 0 ? (
           <div className="p-10 text-center text-slate-500">
-            <p className="mb-3">ဘာ transaction မှ မရှိသေးပါ။</p>
+            <p className="mb-3">ဒီ range မှာ transaction မရှိပါ။</p>
             <Link href="/transactions/new" className="btn-primary">
-              <Plus className="w-4 h-4" /> Add your first transaction
+              <Plus className="w-4 h-4" /> Add Transaction
             </Link>
           </div>
         ) : (
@@ -112,7 +119,9 @@ export default async function DashboardPage() {
                   </div>
                   <div className="min-w-0">
                     <div className="font-medium truncate">{t.merchant || t.note || t.category?.name || "Transaction"}</div>
-                    <div className="text-xs text-slate-500">{formatDate(t.occurred_at)} · {t.category?.name || "Uncategorized"}</div>
+                    <div className="text-xs text-slate-500">
+                      {formatDate(t.occurred_at)} · {t.category?.name || "Uncategorized"}
+                    </div>
                   </div>
                 </div>
                 <div className={`font-semibold ${t.kind === "income" ? "text-green-600" : "text-red-600"}`}>

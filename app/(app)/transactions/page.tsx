@@ -1,24 +1,31 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { formatMoney, formatDate } from "@/lib/utils";
+import { parseRangeFromSearchParams } from "@/lib/date-range";
+import { DateRangeFilter } from "@/components/DateRangeFilter";
 import Link from "next/link";
-import { Plus, Filter, Mail } from "lucide-react";
+import { Plus, Mail } from "lucide-react";
 
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: { kind?: string; currency?: string };
+  searchParams: { kind?: string; currency?: string; preset?: string; from?: string; to?: string };
 }) {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
   const supabase = createClient();
+  const range = parseRangeFromSearchParams(searchParams);
 
   let q = supabase
     .from("transactions")
-    .select("id, amount, currency, kind, note, merchant, occurred_at, source, category:categories(name, icon, color)")
+    .select(
+      "id, amount, currency, kind, note, merchant, occurred_at, source, category:categories(name, icon, color)"
+    )
     .eq("workspace_id", ctx.workspace.id)
+    .gte("occurred_at", range.from.toISOString())
+    .lte("occurred_at", range.to.toISOString())
     .order("occurred_at", { ascending: false })
-    .limit(200);
+    .limit(500);
 
   if (searchParams.kind === "expense" || searchParams.kind === "income") {
     q = q.eq("kind", searchParams.kind);
@@ -30,29 +37,45 @@ export default async function TransactionsPage({
   const { data: txs } = await q;
   const list = (txs ?? []) as any[];
 
+  // Build URL helper that preserves date range
+  const dateParams = new URLSearchParams();
+  if (searchParams.preset) dateParams.set("preset", searchParams.preset);
+  if (searchParams.from) dateParams.set("from", searchParams.from);
+  if (searchParams.to) dateParams.set("to", searchParams.to);
+  const dateQS = dateParams.toString();
+
+  function withKind(kind?: string) {
+    const p = new URLSearchParams(dateParams);
+    if (kind) p.set("kind", kind);
+    return `/transactions?${p.toString()}`;
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Transactions</h1>
-          <p className="text-sm text-slate-500">{list.length} records</p>
+          <p className="text-sm text-slate-500">
+            {list.length} records · {range.label}
+          </p>
         </div>
         <Link href="/transactions/new" className="btn-primary">
           <Plus className="w-4 h-4" /> Add
         </Link>
       </div>
 
-      {/* Filter chips */}
+      <DateRangeFilter />
+
       <div className="flex gap-2 flex-wrap text-sm">
-        <FilterChip href="/transactions" label="All" active={!searchParams.kind} />
-        <FilterChip href="/transactions?kind=expense" label="Expenses" active={searchParams.kind === "expense"} />
-        <FilterChip href="/transactions?kind=income" label="Income" active={searchParams.kind === "income"} />
+        <FilterChip href={withKind()} label="All" active={!searchParams.kind} />
+        <FilterChip href={withKind("expense")} label="Expenses" active={searchParams.kind === "expense"} />
+        <FilterChip href={withKind("income")} label="Income" active={searchParams.kind === "income"} />
       </div>
 
       <div className="card overflow-hidden">
         {list.length === 0 ? (
           <div className="p-10 text-center text-slate-500">
-            <p className="mb-3">No transactions yet။</p>
+            <p className="mb-3">ဒီ range မှာ transaction မရှိပါ။</p>
             <Link href="/transactions/new" className="btn-primary">
               <Plus className="w-4 h-4" /> Add Transaction
             </Link>
@@ -73,7 +96,7 @@ export default async function TransactionsPage({
                       <div className="font-medium truncate flex items-center gap-2">
                         {t.merchant || t.note || t.category?.name || "Transaction"}
                         {t.source === "krungthai_email" && (
-                          <span title="Auto-imported from Krungthai Bank email">
+                          <span title="Auto-imported from bank email">
                             <Mail className="w-3 h-3 text-brand-500" />
                           </span>
                         )}

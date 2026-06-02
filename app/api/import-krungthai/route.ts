@@ -2,11 +2,12 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { gmailClient, extractText } from "@/lib/gmail";
 import { parseKrungthaiEmail } from "@/lib/gemini";
+import { allDefaultSenders, sendersForBankKeys } from "@/lib/banks";
 import { NextResponse } from "next/server";
 
 /**
  * POST /api/import-krungthai
- * Body (optional): { days?: number }  // how many days back to scan (default 30)
+ * Body (optional): { days?: number, connectionId?: string }
  *
  * Auth: requires logged-in workspace member (manual trigger from settings page)
  *       OR cron secret in header `x-cron-secret` for scheduled runs.
@@ -22,14 +23,12 @@ export async function POST(request: Request) {
   const srv = createServiceClient();
 
   if (isCron) {
-    // Cron: process all active connections
     const { data } = await srv
       .from("gmail_connections")
       .select("*")
       .eq("is_active", true);
     connections = data ?? [];
   } else {
-    // Manual: only current user
     const ctx = await getActiveWorkspace();
     if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     const { data } = await srv
@@ -42,10 +41,11 @@ export async function POST(request: Request) {
   }
 
   if (connections.length === 0) {
-    return NextResponse.json({ ok: true, processed: 0, message: "No active Gmail connections." });
+    return NextResponse.json({ ok: true, added: 0, skipped: 0, errors: 0, message: "No active Gmail connections." });
   }
 
-  const senders = (process.env.KRUNGTHAI_EMAIL_SENDERS || "ktbalert@ktb.co.th,kma@ktbnetbank.com,no-reply@ktb.co.th")
+  // Legacy env-var fallback (kept for backwards compatibility)
+  const legacyEnvSenders = (process.env.KRUNGTHAI_EMAIL_SENDERS || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
@@ -57,6 +57,23 @@ export async function POST(request: Request) {
 
   for (const conn of connections) {
     try {
+      // Resolve which senders to look for, in priority order:
+      // 1. bank_keys column → use those banks' senders
+      // 2. legacy env var
+      // 3. all known Thai bank senders
+      const bankKeys: string[] = Array.isArray(conn.bank_keys) ? conn.bank_keys : [];
+      const senders =
+        bankKeys.length > 0
+          ? sendersForBankKeys(bankKeys)
+          : legacyEnvSenders.length > 0
+          ? legacyEnvSenders
+          : allDefaultSenders();
+
+      if (senders.length === 0) {
+        results.push({ email: conn.email, error: "no senders configured" });
+        continue;
+      }
+
       const { gmail, oauth2Client } = gmailClient(conn.access_token, conn.refresh_token);
 
       // Refresh token if needed
@@ -74,38 +91,53 @@ export async function POST(request: Request) {
         }
       }
 
-      // Build search query
       const fromQuery = senders.map((s) => `from:${s}`).join(" OR ");
-      const afterDate = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10).replace(/-/g, "/");
+      const afterDate = new Date(Date.now() - days * 86400_000)
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "/");
       const q = `(${fromQuery}) after:${afterDate}`;
 
-      const list = await gmail.users.messages.list({ userId: "me", q, maxResults: 100 });
+      const list = await gmail.users.messages.list({
+        userId: "me",
+        q,
+        maxResults: 100,
+      });
       const msgs = list.data.messages ?? [];
 
+      let scannedCount = 0;
       for (const m of msgs) {
         if (!m.id) continue;
+        scannedCount++;
 
-        // Dedup: skip if already imported
         const { data: existing } = await srv
           .from("transactions")
           .select("id")
           .eq("workspace_id", conn.workspace_id)
           .eq("source_ref", m.id)
           .maybeSingle();
-        if (existing) { totalSkipped++; continue; }
-
-        // Fetch full message
-        const full = await gmail.users.messages.get({ userId: "me", id: m.id, format: "full" });
-        const text = extractText(full.data.payload);
-        if (!text) { totalSkipped++; continue; }
-
-        // Parse with Gemini
-        const parsed = await parseKrungthaiEmail(text);
-        if (!parsed || parsed.confidence < 0.5 || !parsed.amount || !parsed.kind) {
-          totalSkipped++; continue;
+        if (existing) {
+          totalSkipped++;
+          continue;
         }
 
-        // Find matching category by hint
+        const full = await gmail.users.messages.get({
+          userId: "me",
+          id: m.id,
+          format: "full",
+        });
+        const text = extractText(full.data.payload);
+        if (!text) {
+          totalSkipped++;
+          continue;
+        }
+
+        const parsed = await parseKrungthaiEmail(text);
+        if (!parsed || parsed.confidence < 0.5 || !parsed.amount || !parsed.kind) {
+          totalSkipped++;
+          continue;
+        }
+
         let category_id: string | null = null;
         if (parsed.category_hint) {
           const { data: cat } = await srv
@@ -118,7 +150,6 @@ export async function POST(request: Request) {
           category_id = cat?.id ?? null;
         }
         if (!category_id) {
-          // fallback to "Other" / "Other Income"
           const fbName = parsed.kind === "income" ? "Other Income" : "Other";
           const { data: cat } = await srv
             .from("categories")
@@ -157,7 +188,7 @@ export async function POST(request: Request) {
         .update({ last_synced_at: new Date().toISOString() })
         .eq("id", conn.id);
 
-      results.push({ email: conn.email, scanned: msgs.length });
+      results.push({ email: conn.email, scanned: scannedCount, senders });
     } catch (e: any) {
       console.error("Sync error for", conn.email, e);
       totalErrors++;
