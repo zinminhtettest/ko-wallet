@@ -152,25 +152,30 @@ export function AppShell({
           </Link>
         )}
 
-        {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 grid grid-cols-4">
-          {nav.map((n) => {
-            const active = pathname === n.href || pathname?.startsWith(n.href + "/");
-            const Icon = n.icon;
-            return (
-              <Link
-                key={n.href}
-                href={n.href}
-                className={cn(
-                  "flex flex-col items-center justify-center py-2.5 text-xs gap-1",
-                  active ? "text-brand-600" : "text-slate-500"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                {n.label}
-              </Link>
-            );
-          })}
+        {/* Mobile bottom nav — rounded top corners, edge-to-edge with safe-area padding */}
+        <nav
+          className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-[28px] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="grid grid-cols-4">
+            {nav.map((n) => {
+              const active = pathname === n.href || pathname?.startsWith(n.href + "/");
+              const Icon = n.icon;
+              return (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className={cn(
+                    "flex flex-col items-center justify-center py-2.5 text-xs gap-1",
+                    active ? "text-brand-600" : "text-slate-500"
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  {n.label}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
       </main>
     </div>
