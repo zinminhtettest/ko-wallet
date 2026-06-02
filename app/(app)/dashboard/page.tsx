@@ -6,6 +6,7 @@ import { DateRangeFilter } from "@/components/DateRangeFilter";
 import { AIInsightsButton } from "@/components/AIInsightsButton";
 import { ClientDate } from "@/components/ClientDate";
 import { TransactionRow } from "@/components/TransactionRow";
+import { WalletPickerRow, type WalletCardData } from "@/components/WalletPickerRow";
 import { convert } from "@/lib/fx";
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Plus, Wallet, Globe } from "lucide-react";
@@ -77,6 +78,57 @@ export default async function DashboardPage({
 
   const recent = all.slice(0, 8);
 
+  // --- Wallet picker row data: per-wallet net/income/expense in each wallet's default currency ---
+  type WsRow = {
+    workspace_id: string;
+    workspace_name: string;
+    default_currency: string;
+    role: "owner" | "member";
+  };
+  const { data: wsList } = await supabase.rpc("list_my_workspaces");
+  const workspaces = ((wsList ?? []) as WsRow[]) || [];
+  const allIds = workspaces.map((w) => w.workspace_id);
+  const walletCards: WalletCardData[] = [];
+  if (allIds.length) {
+    const { data: allTx } = await supabase
+      .from("transactions")
+      .select("workspace_id, amount, currency, kind")
+      .in("workspace_id", allIds)
+      .gte("occurred_at", range.from.toISOString())
+      .lte("occurred_at", range.to.toISOString());
+    const rows = (allTx ?? []) as any[];
+    for (const w of workspaces) {
+      let inc = 0;
+      let exp = 0;
+      for (const t of rows) {
+        if (t.workspace_id !== w.workspace_id) continue;
+        const amt = convert(
+          Number(t.amount),
+          (t.currency || "THB") as Currency,
+          w.default_currency as Currency,
+          rates
+        );
+        if (t.kind === "income") inc += amt;
+        else exp += amt;
+      }
+      walletCards.push({
+        id: w.workspace_id,
+        name: w.workspace_name,
+        currency: w.default_currency,
+        role: w.role,
+        income: inc,
+        expense: exp,
+        net: inc - exp,
+      });
+    }
+    // Put active wallet first
+    walletCards.sort((a, b) => {
+      if (a.id === ctx.workspace.id) return -1;
+      if (b.id === ctx.workspace.id) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
   // Net worth combined: convert net of every currency to base
   let combinedNet = 0;
   let combinedIncome = 0;
@@ -104,6 +156,8 @@ export default async function DashboardPage({
       </div>
 
       <DateRangeFilter />
+
+      <WalletPickerRow wallets={walletCards} activeId={ctx.workspace.id} />
 
       {/* Net Worth combined card */}
       <div className="card p-5 bg-gradient-to-br from-brand-50 to-white dark:from-slate-900 dark:to-slate-950">
