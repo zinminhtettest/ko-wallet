@@ -2,10 +2,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, ListChecks, BarChart3, Settings, LogOut, Wallet, Plus, Bell } from "lucide-react";
+import { Home, ListChecks, BarChart3, Settings, Wallet, Plus, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SidebarUtilityPill } from "@/components/SidebarUtilityPill";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -75,14 +76,26 @@ export function AppShell({
     <div className="min-h-screen flex">
       {/* Sidebar (desktop) */}
       <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-5">
+        {/* Top brand row — logo + name + notification bell */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-brand-600 text-white grid place-items-center flex-shrink-0">
+            <Wallet className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-slate-900 dark:text-white leading-tight truncate">
+              Ko Wallet
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+              Family money tracker
+            </div>
+          </div>
+          <NotificationBell className="w-8 h-8 flex-shrink-0" />
+        </div>
+
         {/* Workspace switcher gets the full row */}
         <WorkspaceSwitcher activeId={activeWorkspaceId} />
 
-        {/* Compact utility row beneath the switcher */}
-        <div className="flex items-center justify-end gap-1 mt-2 mb-4">
-          <ThemeToggle />
-          <NotificationBell className="w-9 h-9" />
-        </div>
+        <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
 
         <nav className="flex-1 space-y-1">
           {nav.map((n) => {
@@ -106,13 +119,12 @@ export function AppShell({
           })}
         </nav>
 
-        <div className="border-t border-slate-200 dark:border-slate-800 pt-3 mt-3">
-          <div className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400 truncate">{userEmail}</div>
-          <form action="/auth/signout" method="POST">
-            <button className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
-              <LogOut className="w-4 h-4" /> Sign out
-            </button>
-          </form>
+        {/* Bottom utility pill — theme + sign out */}
+        <div className="mt-3">
+          <SidebarUtilityPill />
+          <div className="mt-2 px-2 text-[10px] text-slate-500 dark:text-slate-400 text-center truncate">
+            {userEmail}
+          </div>
         </div>
       </aside>
 
