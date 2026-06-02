@@ -62,6 +62,13 @@ export default async function AcceptInvitePage({ params }: { params: { token: st
         body: `${user!.email || "A new member"} accepted your invite to ${wsName}.`,
         link: "/settings/workspace",
       });
+      try {
+        const { pushToTelegram } = await import("@/lib/telegram-push");
+        await pushToTelegram(
+          ownerId,
+          `👥 <b>${user!.email || "Someone"}</b> joined your wallet <b>${wsName}</b>.`
+        );
+      } catch {}
     }
   } catch (e) {
     console.log("[invite-accept] notification insert failed:", (e as any)?.message);

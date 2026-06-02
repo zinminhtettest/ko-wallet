@@ -45,6 +45,14 @@ export async function POST() {
       body: `${b.spent} / ${b.amount} ${b.currency} spent so far.`,
       link: "/settings/budgets",
     });
+    try {
+      const { pushToTelegram } = await import("@/lib/telegram-push");
+      const emoji = level === "over" ? "🚨" : "⚠️";
+      await pushToTelegram(
+        ctx.user.id,
+        `${emoji} <b>${title}</b>\nSpent ${b.spent} / ${b.amount} ${b.currency}`
+      );
+    } catch {}
     alerts.push({ category: b.category_name, pct, level });
   }
 

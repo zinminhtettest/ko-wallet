@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
-import { formatMoney, formatDate } from "@/lib/utils";
 import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { TransactionRow } from "@/components/TransactionRow";
 import Link from "next/link";
-import { Plus, Mail, Download } from "lucide-react";
+import { Plus, Download } from "lucide-react";
 
 export default async function TransactionsPage({
   searchParams,
@@ -19,7 +19,7 @@ export default async function TransactionsPage({
   let q = supabase
     .from("transactions")
     .select(
-      "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, category:categories(name, icon, color)"
+      "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, created_by_name, telegram_username, category:categories(name, icon, color)"
     )
     .eq("workspace_id", ctx.workspace.id)
     .gte("occurred_at", range.from.toISOString())
@@ -98,34 +98,7 @@ export default async function TransactionsPage({
         ) : (
           <ul className="divide-y divide-slate-100">
             {list.map((t) => (
-              <li key={t.id}>
-                <Link href={`/transactions/${t.id}/edit`} className="flex items-center justify-between p-4 hover:bg-slate-50">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="w-10 h-10 rounded-xl grid place-items-center text-white text-xs font-bold flex-shrink-0"
-                      style={{ background: t.category?.color || "#94a3b8" }}
-                    >
-                      {(t.category?.name || "?").slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-medium truncate flex items-center gap-2">
-                        {t.merchant || t.note || t.category?.name || "Transaction"}
-                        {t.source === "krungthai_email" && (
-                          <span title="Auto-imported from bank email">
-                            <Mail className="w-3 h-3 text-brand-500" />
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {formatDate(t.occurred_at)} · {t.category?.name || "Uncategorized"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={`font-semibold whitespace-nowrap ${t.kind === "income" ? "text-green-600" : "text-red-600"}`}>
-                    {t.kind === "income" ? "+" : "−"} {formatMoney(Number(t.amount), t.currency)}
-                  </div>
-                </Link>
-              </li>
+              <TransactionRow key={t.id} tx={t as any} />
             ))}
           </ul>
         )}

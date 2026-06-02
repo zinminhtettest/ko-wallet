@@ -59,7 +59,8 @@ async function processRecurring() {
       merchant: r.merchant,
       note: r.note ? `[recurring] ${r.note}` : `[recurring] ${r.name}`,
       occurred_at: occurred.toISOString(),
-      source: "manual",
+      source: "recurring",
+      created_by_name: `Recurring: ${r.name}`,
     });
     if (txErr) continue;
 

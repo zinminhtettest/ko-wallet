@@ -84,6 +84,11 @@ export function TransactionForm({
     if (!user) {
       setErr("Login session expired"); setSaving(false); return;
     }
+    const displayName =
+      (user.user_metadata as any)?.full_name ||
+      (user.user_metadata as any)?.name ||
+      user.email?.split("@")[0] ||
+      null;
     const row = {
       workspace_id: workspaceId,
       user_id: user.id,
@@ -94,6 +99,8 @@ export function TransactionForm({
       merchant: merchant || null,
       note: note || null,
       occurred_at: new Date(occurredAt).toISOString(),
+      source: "manual",
+      created_by_name: existing ? undefined : displayName,
     };
     const op = existing
       ? supabase.from("transactions").update(row).eq("id", existing.id)

@@ -252,6 +252,10 @@ export async function POST(request: Request) {
       categoryId,
       merchant,
       note: note || "via Telegram",
+      source: "telegram_text",
+      telegramUsername: msg.from?.username ? `@${msg.from.username}` : null,
+      createdByName:
+        msg.from?.first_name || msg.from?.username || "Telegram user",
     });
     await tgSendMessage(
       chatId,
@@ -259,6 +263,58 @@ export async function POST(request: Request) {
         merchant ? ` · ${merchant}` : ""
       }`
     );
+    return NextResponse.json({ ok: true });
+  }
+
+  // Shared attribution snapshot for all Telegram-created transactions
+  const tgHandle = msg.from?.username ? `@${msg.from.username}` : null;
+  const tgDisplayName =
+    msg.from?.first_name || msg.from?.username || "Telegram user";
+
+  // Photo receipt → Gemini Vision parse → auto-add
+  const photos = msg.photo;
+  if (Array.isArray(photos) && photos.length > 0) {
+    if (!process.env.GEMINI_API_KEY) {
+      await tgSendMessage(chatId, "📷 Receipt scanning needs GEMINI_API_KEY.");
+      return NextResponse.json({ ok: true });
+    }
+    // Telegram sends multiple sizes; take the largest
+    const largest = photos[photos.length - 1];
+    const file = await downloadTelegramFile(largest.file_id);
+    if (!file) {
+      await tgSendMessage(chatId, "📷 Photo download failed. Try again.");
+      return NextResponse.json({ ok: true });
+    }
+    const receipt = await parseReceiptWithGemini(file.base64, file.mimeType);
+    if (!receipt || (receipt.confidence ?? 0) < 0.3) {
+      await tgSendMessage(
+        chatId,
+        "📷 Receipt မဖတ်ရပါ။ ပိုကြည်လင်တဲ့ ပုံ တင်ပါ ဒါမှ caption နဲ့ amount ထည့်ပါ။"
+      );
+      return NextResponse.json({ ok: true });
+    }
+    // Map receipt fields to our parsed format
+    const parsedFromReceipt = {
+      intent: "add_transaction",
+      kind: "expense",
+      amount: receipt.amount,
+      currency: receipt.currency || null,
+      merchant: receipt.merchant || null,
+      category_hint: receipt.category_hint || null,
+      note: receipt.items || null,
+      confidence: receipt.confidence,
+    };
+    await handleParsedTransaction(srv, chatId, parsedFromReceipt, {
+      userId,
+      wsId,
+      defaultCur,
+      sourceLabel: `via Telegram photo${
+        receipt.merchant ? ` · ${receipt.merchant}` : ""
+      }`,
+      source: "telegram_photo",
+      telegramUsername: tgHandle,
+      createdByName: tgDisplayName,
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -284,6 +340,9 @@ export async function POST(request: Request) {
       wsId,
       defaultCur,
       sourceLabel: `via Telegram voice${voiceParsed.transcript ? ` · "${voiceParsed.transcript}"` : ""}`,
+      source: "telegram_voice",
+      telegramUsername: tgHandle,
+      createdByName: tgDisplayName,
     });
     return NextResponse.json({ ok: true });
   }
@@ -324,6 +383,9 @@ export async function POST(request: Request) {
       wsId,
       defaultCur,
       sourceLabel: "via Telegram",
+      source: "telegram_text",
+      telegramUsername: tgHandle,
+      createdByName: tgDisplayName,
     });
     return NextResponse.json({ ok: true });
   }
@@ -337,7 +399,15 @@ async function handleParsedTransaction(
   srv: any,
   chatId: number | string,
   parsed: any,
-  ctx: { userId: string; wsId: string; defaultCur: string; sourceLabel: string }
+  ctx: {
+    userId: string;
+    wsId: string;
+    defaultCur: string;
+    sourceLabel: string;
+    source?: string;
+    telegramUsername?: string | null;
+    createdByName?: string | null;
+  }
 ) {
   if (parsed.intent !== "add_transaction") {
     await tgSendMessage(chatId, "🤔 ဘာပြောတာလဲ နားမလည်ပါ။");
@@ -373,6 +443,9 @@ async function handleParsedTransaction(
     categoryId,
     merchant: parsed.merchant || null,
     note: parsed.note ? `${parsed.note} (${ctx.sourceLabel})` : ctx.sourceLabel,
+    source: ctx.source || "telegram_text",
+    telegramUsername: ctx.telegramUsername,
+    createdByName: ctx.createdByName,
   });
   const label = kind === "income" ? "Income" : "Expense";
   const tail = [parsed.merchant, parsed.category_hint].filter(Boolean).join(" · ");
@@ -380,6 +453,49 @@ async function handleParsedTransaction(
     chatId,
     `✅ ${label} ${amt} ${cur}${tail ? ` · ${tail}` : ""}`
   );
+
+  // Trigger budget check (and Telegram push if exceeded)
+  try {
+    await checkAndAlertBudgets(srv, ctx.userId, ctx.wsId);
+  } catch {}
+}
+
+async function checkAndAlertBudgets(srv: any, userId: string, wsId: string) {
+  const { data: status } = await srv.rpc("budget_status", { ws_id: wsId });
+  const monthKey = new Date().toISOString().slice(0, 7);
+  for (const b of (status ?? []) as any[]) {
+    const pct = Number(b.pct || 0);
+    if (pct < 80) continue;
+    const level = pct >= 100 ? "over" : "warn";
+    const title =
+      level === "over"
+        ? `Budget exceeded: ${b.category_name} (${monthKey})`
+        : `Budget at ${Math.round(pct)}%: ${b.category_name} (${monthKey})`;
+    const { data: existing } = await srv
+      .from("notifications")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("title", title)
+      .limit(1);
+    if (existing && existing.length) continue;
+    await srv.from("notifications").insert({
+      user_id: userId,
+      workspace_id: wsId,
+      kind: "budget",
+      title,
+      body: `${b.spent} / ${b.amount} ${b.currency} spent so far.`,
+      link: "/settings/budgets",
+    });
+    // Also push to Telegram if linked
+    try {
+      const { pushToTelegram } = await import("@/lib/telegram-push");
+      const emoji = level === "over" ? "🚨" : "⚠️";
+      await pushToTelegram(
+        userId,
+        `${emoji} <b>${title}</b>\nSpent ${b.spent} / ${b.amount} ${b.currency}`
+      );
+    } catch {}
+  }
 }
 
 // ---- helpers ----
@@ -491,6 +607,9 @@ async function insertTx(
     categoryId: string | null;
     merchant: string | null;
     note: string | null;
+    source?: string;
+    telegramUsername?: string | null;
+    createdByName?: string | null;
   }
 ) {
   return srv.from("transactions").insert({
@@ -503,7 +622,9 @@ async function insertTx(
     merchant: args.merchant,
     note: args.note,
     occurred_at: new Date().toISOString(),
-    source: "manual",
+    source: args.source || "telegram_text",
+    telegram_username: args.telegramUsername || null,
+    created_by_name: args.createdByName || null,
   });
 }
 
@@ -554,6 +675,44 @@ Add a "transcript" field with the transcribed text:
 }
 
 If unintelligible, return intent="unknown" with confidence < 0.3.`;
+
+const RECEIPT_PROMPT = `You extract receipt / bill data from photos and return ONLY a JSON object.
+Schema:
+{
+  "amount": number,
+  "currency": "THB" | "MMK" | "USD" | null,
+  "merchant": string|null,
+  "occurred_at": "YYYY-MM-DDTHH:mm:ss"|null,
+  "category_hint": "Food"|"Transport"|"Shopping"|"Bills"|"Health"|"Entertainment"|"Travel"|"Education"|"Gift"|"Other"|null,
+  "items": string|null,
+  "confidence": number
+}
+If not a receipt or unreadable, set confidence < 0.3 and fields to null.
+Thai dates may be DD/MM/YYYY. Burmese receipts use MMK. Strip currency symbols.`;
+
+async function parseReceiptWithGemini(
+  base64: string,
+  mimeType: string
+): Promise<any | null> {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.1,
+      },
+    });
+    const result = await model.generateContent([
+      { text: RECEIPT_PROMPT },
+      { inlineData: { mimeType, data: base64 } },
+    ]);
+    return JSON.parse(result.response.text());
+  } catch (e: any) {
+    console.error("[telegram] receipt parse failed:", e?.message);
+    return null;
+  }
+}
 
 async function parseAudioWithGemini(
   base64: string,
