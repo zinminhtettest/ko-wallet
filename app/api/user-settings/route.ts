@@ -15,6 +15,7 @@ export async function GET() {
     base_currency: data?.base_currency || "THB",
     rate_thb_to_mmk: Number(data?.rate_thb_to_mmk ?? 130),
     rate_thb_to_usd: Number(data?.rate_thb_to_usd ?? 0.028),
+    ui_language: data?.ui_language || "en",
   });
 }
 
@@ -24,16 +25,21 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await request.json();
 
-  const { error } = await supabase.from("user_settings").upsert(
-    {
-      user_id: user.id,
-      base_currency: body.base_currency || "THB",
-      rate_thb_to_mmk: Number(body.rate_thb_to_mmk) || 130,
-      rate_thb_to_usd: Number(body.rate_thb_to_usd) || 0.028,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" }
-  );
+  // Build patch with only the keys provided so other settings stay intact
+  const upd: any = { user_id: user.id, updated_at: new Date().toISOString() };
+  if (body.base_currency) upd.base_currency = body.base_currency;
+  if (body.rate_thb_to_mmk != null) upd.rate_thb_to_mmk = Number(body.rate_thb_to_mmk);
+  if (body.rate_thb_to_usd != null) upd.rate_thb_to_usd = Number(body.rate_thb_to_usd);
+  if (body.ui_language && ["en", "my", "th"].includes(body.ui_language)) {
+    upd.ui_language = body.ui_language;
+  }
+  // For an upsert without specifying defaults, fill them when row doesn't exist:
+  if (!upd.base_currency) upd.base_currency = "THB";
+  if (upd.rate_thb_to_mmk == null) upd.rate_thb_to_mmk = 130;
+  if (upd.rate_thb_to_usd == null) upd.rate_thb_to_usd = 0.028;
+  const { error } = await supabase.from("user_settings").upsert(upd, {
+    onConflict: "user_id",
+  });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
