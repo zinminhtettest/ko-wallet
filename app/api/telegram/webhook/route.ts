@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     const code = linkMatch[1];
     const { data: row } = await srv
       .from("telegram_link_codes")
-      .select("user_id, expires_at")
+      .select("user_id, workspace_id, expires_at")
       .eq("code", code)
       .maybeSingle();
     if (!row) {
@@ -85,18 +85,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
     await srv.from("telegram_links").upsert(
-      { user_id: row.user_id, chat_id: chatId, username },
+      {
+        user_id: row.user_id,
+        chat_id: chatId,
+        username,
+        active_workspace_id: row.workspace_id,
+      },
       { onConflict: "user_id" }
     );
+    // Resolve the wallet name for a friendly confirmation
+    let walletName = "your wallet";
+    if (row.workspace_id) {
+      const { data: ws } = await srv
+        .from("workspaces")
+        .select("name")
+        .eq("id", row.workspace_id)
+        .maybeSingle();
+      if (ws?.name) walletName = ws.name;
+    }
     await srv.from("telegram_link_codes").delete().eq("code", code);
-    await tgSendMessage(chatId, "✅ Linked! Try /balance, /add, /income — or just type naturally.");
+    await tgSendMessage(
+      chatId,
+      `✅ Linked to <b>${walletName}</b>. All bot transactions go to this wallet.\nType /use to see/change wallet.`
+    );
     return NextResponse.json({ ok: true });
   }
 
   // From here on, the chat must be linked
   const { data: link } = await srv
     .from("telegram_links")
-    .select("user_id")
+    .select("user_id, active_workspace_id")
     .eq("chat_id", chatId)
     .maybeSingle();
   if (!link) {
@@ -104,6 +122,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
   const userId = link.user_id;
+  const activeWsId: string | null = link.active_workspace_id;
 
   // /unlink
   if (/^\/unlink\b/i.test(text)) {
@@ -112,8 +131,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Resolve user's active workspace
-  const ws = await getActiveWorkspaceForUser(srv, userId);
+  // /use — list wallets or switch
+  const useMatch = text.match(/^\/use(?:@\w+)?(?:\s+(.+))?$/i);
+  if (useMatch) {
+    const allWs = await listUserWorkspaces(srv, userId);
+    if (!allWs.length) {
+      await tgSendMessage(chatId, "❌ No workspace found. Open the app first.");
+      return NextResponse.json({ ok: true });
+    }
+    const arg = (useMatch[1] || "").trim();
+    if (!arg) {
+      const list = allWs
+        .map((w: any) => `${w.id === activeWsId ? "✅" : "▫️"} ${w.name} (${w.default_currency})`)
+        .join("\n");
+      await tgSendMessage(
+        chatId,
+        `<b>Wallets</b>\n${list}\n\nSwitch with: <code>/use WalletName</code>`
+      );
+      return NextResponse.json({ ok: true });
+    }
+    const lower = arg.toLowerCase();
+    const target = allWs.find((w: any) => w.name.toLowerCase() === lower) ||
+      allWs.find((w: any) => w.name.toLowerCase().includes(lower));
+    if (!target) {
+      await tgSendMessage(chatId, `❌ No wallet matches "${arg}". Send /use to see all.`);
+      return NextResponse.json({ ok: true });
+    }
+    await srv
+      .from("telegram_links")
+      .update({ active_workspace_id: target.id })
+      .eq("user_id", userId);
+    await tgSendMessage(chatId, `✅ Now using <b>${target.name}</b>.`);
+    return NextResponse.json({ ok: true });
+  }
+
+  // Resolve workspace for transactions: use link.active_workspace_id if set & accessible
+  let ws: any = null;
+  if (activeWsId) {
+    const allWs = await listUserWorkspaces(srv, userId);
+    ws = allWs.find((w: any) => w.id === activeWsId) || null;
+  }
+  if (!ws) {
+    ws = await getActiveWorkspaceForUser(srv, userId);
+  }
   if (!ws) {
     await tgSendMessage(chatId, "❌ No workspace found. Open the app first.");
     return NextResponse.json({ ok: true });
@@ -255,19 +315,27 @@ async function sendHelp(chatId: number | string) {
       `<code>/balance</code> — this month's summary\n` +
       `<code>/add 250 thb food coffee</code> — quick expense\n` +
       `<code>/income 50000 mmk salary</code> — quick income\n` +
+      `<code>/use</code> — list wallets / <code>/use WalletName</code> switch\n` +
       `<code>/link 123456</code> — link account\n` +
       `<code>/unlink</code> — disconnect`
   );
 }
 
 async function getActiveWorkspaceForUser(srv: any, userId: string) {
+  const list = await listUserWorkspaces(srv, userId);
+  if (!list.length) return null;
+  // Prefer owner workspaces when no explicit active is set
+  return list.find((w: any) => w._role === "owner") || list[0];
+}
+
+async function listUserWorkspaces(srv: any, userId: string) {
   const { data: members } = await srv
     .from("workspace_members")
-    .select("workspace_id, role, workspaces(id, name, default_currency, owner_id)")
+    .select("role, workspaces(id, name, default_currency, owner_id)")
     .eq("user_id", userId);
-  const list = (members ?? []) as any[];
-  if (!list.length) return null;
-  return (list.find((m) => m.role === "owner") || list[0]).workspaces;
+  return ((members ?? []) as any[])
+    .map((m) => ({ ...m.workspaces, _role: m.role }))
+    .filter((w) => w && w.id);
 }
 
 async function sendBalance(srv: any, chatId: number | string, wsId: string, wsName: string) {
