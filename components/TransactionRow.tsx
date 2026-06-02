@@ -72,7 +72,7 @@ export function TransactionRow({ tx }: { tx: Tx }) {
     : null;
 
   return (
-    <li className="group">
+    <li>
       <div className="relative flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40">
         <Link
           href={`/transactions/${tx.id}/edit`}
@@ -119,7 +119,7 @@ export function TransactionRow({ tx }: { tx: Tx }) {
             type="button"
             onClick={onDelete}
             disabled={deleting}
-            className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />

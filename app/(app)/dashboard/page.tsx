@@ -5,6 +5,7 @@ import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
 import { AIInsightsButton } from "@/components/AIInsightsButton";
 import { ClientDate } from "@/components/ClientDate";
+import { TransactionRow } from "@/components/TransactionRow";
 import { convert } from "@/lib/fx";
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Plus, Wallet, Globe } from "lucide-react";
@@ -34,15 +35,31 @@ export default async function DashboardPage({
     rate_thb_to_usd: Number(settings?.rate_thb_to_usd ?? 0.028),
   };
 
-  const { data: txs } = await supabase
+  // Try with full attribution columns; fall back gracefully if migration not run.
+  let txsRes: any = await supabase
     .from("transactions")
     .select(
-      "id, amount, currency, kind, note, merchant, occurred_at, category:categories(name, icon, color)"
+      "id, amount, currency, kind, note, merchant, occurred_at, source, created_by_name, telegram_username, category:categories(name, icon, color)"
     )
     .eq("workspace_id", ctx.workspace.id)
     .gte("occurred_at", range.from.toISOString())
     .lte("occurred_at", range.to.toISOString())
     .order("created_at", { ascending: false });
+  if (txsRes.error) {
+    const msg = (txsRes.error.message || "").toLowerCase();
+    if (msg.includes("schema cache") || msg.includes("could not find") || msg.includes("does not exist")) {
+      txsRes = await supabase
+        .from("transactions")
+        .select(
+          "id, amount, currency, kind, note, merchant, occurred_at, category:categories(name, icon, color)"
+        )
+        .eq("workspace_id", ctx.workspace.id)
+        .gte("occurred_at", range.from.toISOString())
+        .lte("occurred_at", range.to.toISOString())
+        .order("created_at", { ascending: false });
+    }
+  }
+  const txs = txsRes.data;
 
   const all = (txs ?? []) as any[];
 
@@ -156,33 +173,30 @@ export default async function DashboardPage({
         </div>
         {recent.length === 0 ? (
           <div className="p-10 text-center text-slate-500">
-            <p className="mb-3">ဒီ range မှာ transaction မရှိပါ။</p>
+            <p className="mb-3">No transactions in this range.</p>
             <Link href="/transactions/new" className="btn-primary">
               <Plus className="w-4 h-4" /> Add Transaction
             </Link>
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
-            {recent.map((t) => (
-              <li key={t.id} className="flex items-center justify-between p-4 hover:bg-slate-50">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="w-10 h-10 rounded-xl grid place-items-center text-white text-xs font-bold flex-shrink-0"
-                    style={{ background: t.category?.color || "#94a3b8" }}
-                  >
-                    {(t.category?.name || "?").slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{t.merchant || t.note || t.category?.name || "Transaction"}</div>
-                    <div className="text-xs text-slate-500">
-                      <ClientDate value={t.occurred_at} /> · {t.category?.name || "Uncategorized"}
-                    </div>
-                  </div>
-                </div>
-                <div className={`font-semibold ${t.kind === "income" ? "text-green-600" : "text-red-600"}`}>
-                  {t.kind === "income" ? "+" : "−"} {formatMoney(Number(t.amount), t.currency)}
-                </div>
-              </li>
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            {recent.map((t: any) => (
+              <TransactionRow
+                key={t.id}
+                tx={{
+                  id: t.id,
+                  amount: t.amount,
+                  currency: t.currency,
+                  kind: t.kind,
+                  note: t.note,
+                  merchant: t.merchant,
+                  occurred_at: t.occurred_at,
+                  source: t.source ?? null,
+                  created_by_name: t.created_by_name ?? null,
+                  telegram_username: t.telegram_username ?? null,
+                  category: t.category ?? null,
+                }}
+              />
             ))}
           </ul>
         )}
