@@ -128,12 +128,20 @@ export async function POST(request: Request) {
 
   // /add AMOUNT [currency] [category] [merchant...]
   const addMatch = text.match(
-    /^\/add(?:@\w+)?\s+(\d+(?:\.\d+)?)\s*([a-zA-Z]{3})?\s*(.*)$/i
+    /^\/add(?:@\w+)?\s+(\d+(?:\.\d+)?)(?:\s+(.*))?$/i
   );
   if (addMatch) {
     const amt = parseFloat(addMatch[1]);
-    const cur = (addMatch[2] || defaultCur).toUpperCase();
-    const rest = (addMatch[3] || "").trim();
+    const remainder = (addMatch[2] || "").trim();
+    // Only consume the next token as a currency if it's THB/MMK/USD.
+    const CURRENCIES = ["THB", "MMK", "USD"];
+    const tokens = remainder.split(/\s+/);
+    let cur = defaultCur;
+    let rest = remainder;
+    if (tokens[0] && CURRENCIES.includes(tokens[0].toUpperCase())) {
+      cur = tokens[0].toUpperCase();
+      rest = tokens.slice(1).join(" ");
+    }
     let categoryId: string | null = null;
     let merchant: string | null = null;
     let note: string | null = null;
