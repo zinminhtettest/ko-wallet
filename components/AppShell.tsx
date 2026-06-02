@@ -74,7 +74,7 @@ export function AppShell({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar (desktop) */}
-      <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-5">
+      <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-5">
         {/* Workspace switcher gets the full row */}
         <WorkspaceSwitcher activeId={activeWorkspaceId} />
 
@@ -120,7 +120,7 @@ export function AppShell({
       <main className="flex-1 min-w-0">
         {/* Mobile top bar — switcher + theme + bell only.
             The "+ Add" action is a FAB at the bottom-right. */}
-        <header className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <header className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex-1 min-w-0">
             <WorkspaceSwitcher activeId={activeWorkspaceId} />
           </div>
@@ -152,7 +152,7 @@ export function AppShell({
         )}
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 grid grid-cols-4">
+        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 grid grid-cols-4">
           {nav.map((n) => {
             const active = pathname === n.href || pathname?.startsWith(n.href + "/");
             const Icon = n.icon;

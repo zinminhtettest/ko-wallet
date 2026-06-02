@@ -128,13 +128,13 @@ export default async function DashboardPage({
                 {formatMoney(balance, c)}
               </div>
               <div className="grid grid-cols-2 gap-2 mt-4">
-                <div className="rounded-lg bg-green-50 p-2.5">
+                <div className="rounded-lg bg-green-50 dark:bg-green-900/30 p-2.5">
                   <div className="flex items-center gap-1 text-xs text-green-700">
                     <ArrowUpRight className="w-3 h-3" /> Income
                   </div>
                   <div className="font-semibold text-green-700">{formatMoney(income, c)}</div>
                 </div>
-                <div className="rounded-lg bg-red-50 p-2.5">
+                <div className="rounded-lg bg-red-50 dark:bg-red-900/30 p-2.5">
                   <div className="flex items-center gap-1 text-xs text-red-700">
                     <ArrowDownRight className="w-3 h-3" /> Expense
                   </div>
