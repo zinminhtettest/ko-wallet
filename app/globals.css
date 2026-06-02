@@ -20,25 +20,25 @@ html.dark {
   color-scheme: dark;
 }
 
-html { background: var(--bg); color: var(--fg); }
-body { background: var(--bg); color: var(--fg); }
+/* HTML bg = the color that should fill the iPhone/Android safe-area below the
+   bottom nav on mobile (white in light, slate-900 in dark). Body sits on top
+   with the page bg color so the page itself still looks light-gray / deep-dark. */
+html { background: #ffffff; color: var(--fg); }
+html.dark { background: #0f172a; }
+body { background: var(--bg); color: var(--fg); min-height: 100vh; }
 
-/* Mobile/PWA: paint the iPhone home-indicator safe-area below the bottom nav
-   with the nav's background color so it looks continuous instead of showing
-   the page bg (or black) under the bar. */
+/* Safe-area utility for the bottom nav padding (replaces inline env() which
+   some React/Next inline-style pipelines can strip). */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Mobile/PWA: make the body NOT cover the safe-area at the bottom so the HTML
+   background (nav color) shows through there — produces a seamless edge-to-edge
+   look like native apps. */
 @media (max-width: 767px) {
-  body::after {
-    content: "";
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-bottom);
-    background: #ffffff;
-    z-index: 30;
-    pointer-events: none;
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+    background-clip: content-box;
   }
-  html.dark body::after { background: #0f172a; }
 }
 
 @layer utilities {
