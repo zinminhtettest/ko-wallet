@@ -7,8 +7,7 @@ export const maxDuration = 30;
 
 const CURRENCIES = ["THB", "MMK", "USD"];
 
-const NL_PROMPT = `You are a personal finance bot assistant. The user sends a short message in Burmese, English, Thai, or any mix.
-Determine the intent and return ONLY a single JSON object — no markdown, no commentary.
+const NL_PROMPT = `You are a personal finance bot for a user who code-switches in Burmese, English, Thai (any mix). Return ONLY a single JSON object — no markdown, no prose.
 
 Schema:
 {
@@ -22,24 +21,62 @@ Schema:
   "confidence": number
 }
 
-Rules:
-- "expense" = money the user spent / paid / bought.
-- "income" = money the user received / earned / got / was paid (salary, gift, transfer-in, refund).
-- "category_hint" must be one of: Food, Transport, Shopping, Bills, Health, Entertainment, Education, Travel, Bank Fee, Salary, Business, Gift, Other.
-- Default currency is the user's wallet currency (THB unless specified). Detect "baht/บาท/฿/THB"=THB, "kyat/ကျပ်/MMK"=MMK, "dollar/$/USD"=USD.
-- If the user asks how much they spent / current balance / their summary → intent=balance.
-- If unclear or just chit-chat → intent=help (so the bot can show commands).
-- confidence: 0..1. For transactions, require ≥ 0.6 to act.
+CORE RULES:
+- If the message has a NUMBER (in any digit form), it is almost certainly a transaction. Default kind=expense unless income signals are clear.
+- "expense" signals: spent, paid, bought, ထမင်းစား, ဝယ်, သုံး, ပေး, ပေါင်းပေး, ထည့်, ပေါင်း, ค่า, ใช้, ซื้อ, จ่าย
+- "income" signals: got/received/earned/salary, ရတယ်, လစာ, ဝင်လာ, ရှင်းပေး, refund, gift, ได้, รับ, เงินเดือน
+- "balance" signals: how much spent, summary, total, ဒီလ ဘယ်လောက်, ဘယ်လောက်သုံး, ပြန်ပြ, ใช้ไปเท่าไหร่
+- "help" only for greetings ("hi", "hello", "မင်္ဂလာပါ") or commands list questions. Never use "help" if there is a clear number with intent.
+- "unknown" only if literally nonsensical garbage. Anything with number + word should attempt add_transaction.
 
-Examples:
-"250 thb coffee" → {"intent":"add_transaction","kind":"expense","amount":250,"currency":"THB","merchant":"coffee","category_hint":"Food","note":null,"confidence":0.9}
+CURRENCY DETECTION:
+- baht / บาท / ฿ / THB → THB
+- kyat / ကျပ် / MMK → MMK
+- dollar / $ / USD → USD
+- No currency mentioned → null (caller will fill default).
+
+NUMBER PARSING (CRITICAL):
+- Burmese digits ၀၁၂၃၄၅၆၇၈၉ → 0123456789. e.g. "၁၂၀" = 120, "၂၀၀၀" = 2000, "၅သိန်း" = 500000 (သိန်း = 100000), "၁သောင်း" = 10000 (သောင်း = 10000), "ငါးထောင်" = 5000 (ထောင် = 1000).
+- Thai digits ๐๑๒๓๔๕๖๗๘๙ → 0-9.
+- Words: "သိန်း"=100000, "သောင်း"=10000, "ထောင်"=1000, "ရာ"=100, "หมื่น"=10000, "พัน"=1000, "ร้อย"=100.
+
+MERCHANT / NOTE EXTRACTION:
+- The non-number, non-verb text is the merchant or note.
+- "7-11", "lotus", "starbucks", "grab" → merchant.
+- Order can be anything: "7-11, 200" → amount=200, merchant="7-11"; "200 at 7-11" → same.
+- Burmese verb-only descriptions go into note: "ထမင်းစား ၁၂၀" → note="ထမင်းစား".
+
+CATEGORY (pick one): Food, Transport, Shopping, Bills, Health, Entertainment, Education, Travel, Bank Fee, Salary, Business, Gift, Other.
+- ထမင်း/ကော်ဖီ/coffee/lunch/food/7-11/Lotus/restaurant → Food
+- Grab/taxi/bus/train/transport/ဂရပ်/ပို့စရိတ်/ပို့ဆောင် → Transport
+- ဈေး/ဈေးသွား/စျေးသွား/shopping/buy stuff/ဝယ်တာ → Shopping
+- bill/ဖုန်းဘီး/မီးဘီး/internet → Bills
+- ဆေး/ဆေးရုံ/ဆရာဝန် → Health
+- ရုပ်ရှင်/Netflix → Entertainment
+- စာ/စာသင် → Education
+- လေယာဉ်/hotel/ခရီး → Travel
+
+CONFIDENCE: 0..1. For transactions caller requires ≥ 0.5. Be generous: if you can extract amount + plausible context, confidence ≥ 0.7.
+
+EXAMPLES (study carefully, especially Burmese variations):
+"250 thb coffee" → {"intent":"add_transaction","kind":"expense","amount":250,"currency":"THB","merchant":"coffee","category_hint":"Food","note":null,"confidence":0.95}
 "bought lunch for 120 baht at 7-11" → {"intent":"add_transaction","kind":"expense","amount":120,"currency":"THB","merchant":"7-11","category_hint":"Food","note":"lunch","confidence":0.95}
+"7-11 , 200" → {"intent":"add_transaction","kind":"expense","amount":200,"currency":null,"merchant":"7-11","category_hint":"Food","note":null,"confidence":0.9}
+"7-11 200" → {"intent":"add_transaction","kind":"expense","amount":200,"currency":null,"merchant":"7-11","category_hint":"Food","note":null,"confidence":0.9}
 "got salary 50000 thb" → {"intent":"add_transaction","kind":"income","amount":50000,"currency":"THB","merchant":null,"category_hint":"Salary","note":"salary","confidence":0.95}
-"ထမင်းစား ၁၂၀" → {"intent":"add_transaction","kind":"expense","amount":120,"currency":"THB","merchant":null,"category_hint":"Food","note":"ထမင်းစား","confidence":0.85}
-"လစာ ၅သိန်း ရတယ်" → {"intent":"add_transaction","kind":"income","amount":500000,"currency":"MMK","merchant":null,"category_hint":"Salary","note":"လစာ","confidence":0.9}
+"ထမင်းစား ၁၂၀" → {"intent":"add_transaction","kind":"expense","amount":120,"currency":null,"merchant":null,"category_hint":"Food","note":"ထမင်းစား","confidence":0.9}
+"စျေးသွား ၂၂၀" → {"intent":"add_transaction","kind":"expense","amount":220,"currency":null,"merchant":null,"category_hint":"Shopping","note":"စျေးသွား","confidence":0.9}
+"၂၀၀၀ ပေါင်းပေး" → {"intent":"add_transaction","kind":"expense","amount":2000,"currency":null,"merchant":null,"category_hint":"Other","note":"ပေါင်းပေး","confidence":0.85}
+"၂၀၀ ပေး" → {"intent":"add_transaction","kind":"expense","amount":200,"currency":null,"merchant":null,"category_hint":"Other","note":"ပေး","confidence":0.85}
+"ကော်ဖီ ၈၀" → {"intent":"add_transaction","kind":"expense","amount":80,"currency":null,"merchant":"ကော်ဖီ","category_hint":"Food","note":null,"confidence":0.9}
+"ဂရပ်ဘ် ၆၀" → {"intent":"add_transaction","kind":"expense","amount":60,"currency":null,"merchant":"Grab","category_hint":"Transport","note":null,"confidence":0.9}
+"လစာ ၅သိန်း ရတယ်" → {"intent":"add_transaction","kind":"income","amount":500000,"currency":"MMK","merchant":null,"category_hint":"Salary","note":"လစာ","confidence":0.95}
+"ဖုန်းဘီး ၃၀၀" → {"intent":"add_transaction","kind":"expense","amount":300,"currency":null,"merchant":null,"category_hint":"Bills","note":"ဖုန်းဘီး","confidence":0.9}
 "ဒီလ ဘယ်လောက် သုံးသွားပြီလဲ" → {"intent":"balance","kind":null,"amount":null,"currency":null,"merchant":null,"category_hint":null,"note":null,"confidence":0.95}
+"ဒီလ summary" → {"intent":"balance","kind":null,"amount":null,"currency":null,"merchant":null,"category_hint":null,"note":null,"confidence":0.9}
 "how much have I spent" → {"intent":"balance","kind":null,"amount":null,"currency":null,"merchant":null,"category_hint":null,"note":null,"confidence":0.95}
 "hi" → {"intent":"help","kind":null,"amount":null,"currency":null,"merchant":null,"category_hint":null,"note":null,"confidence":0.9}
+"မင်္ဂလာပါ" → {"intent":"help","kind":null,"amount":null,"currency":null,"merchant":null,"category_hint":null,"note":null,"confidence":0.9}
 `;
 
 export async function POST(request: Request) {
@@ -258,7 +295,7 @@ export async function POST(request: Request) {
   if (parsed.intent === "add_transaction") {
     const kind = parsed.kind === "income" ? "income" : "expense";
     const amt = Number(parsed.amount);
-    if (!amt || amt <= 0 || (parsed.confidence ?? 0) < 0.6) {
+    if (!amt || amt <= 0 || (parsed.confidence ?? 0) < 0.5) {
       await tgSendMessage(chatId, "🤔 Amount မှန်ကန်အောင် ပြန်ပြောပါ။");
       return NextResponse.json({ ok: true });
     }
