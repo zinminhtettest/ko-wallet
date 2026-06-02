@@ -4,6 +4,7 @@ import { formatMoney, formatDate } from "@/lib/utils";
 import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
 import { AIInsightsButton } from "@/components/AIInsightsButton";
+import { ClientDate } from "@/components/ClientDate";
 import { convert } from "@/lib/fx";
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Plus, Wallet, Globe } from "lucide-react";
@@ -77,7 +78,7 @@ export default async function DashboardPage({
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-sm text-slate-500">
-            {range.label} · {formatDate(range.from)} → {formatDate(range.to)}
+            {range.label} · <ClientDate value={range.from.toISOString()} /> → <ClientDate value={range.to.toISOString()} />
           </p>
         </div>
         <Link href="/transactions/new" className="btn-primary hidden md:inline-flex">
@@ -174,7 +175,7 @@ export default async function DashboardPage({
                   <div className="min-w-0">
                     <div className="font-medium truncate">{t.merchant || t.note || t.category?.name || "Transaction"}</div>
                     <div className="text-xs text-slate-500">
-                      {formatDate(t.occurred_at)} · {t.category?.name || "Uncategorized"}
+                      <ClientDate value={t.occurred_at} /> · {t.category?.name || "Uncategorized"}
                     </div>
                   </div>
                 </div>

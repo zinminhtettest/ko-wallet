@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ClientDate } from "@/components/ClientDate";
 
 export type NotificationItem = {
   id: string;
@@ -95,7 +96,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
                   <div className="text-sm text-slate-600">{n.body}</div>
                 )}
                 <div className="text-xs text-slate-400 mt-0.5">
-                  {new Date(n.created_at).toLocaleString()}
+                  <ClientDate value={n.created_at} withTime />
                 </div>
               </div>
             </div>

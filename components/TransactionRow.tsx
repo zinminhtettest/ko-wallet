@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, MessageCircle, Mic, Camera, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatMoney, formatDate } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils";
+import { ClientDate } from "@/components/ClientDate";
 
 type Tx = {
   id: string;
@@ -97,7 +98,7 @@ export function TransactionRow({ tx }: { tx: Tx }) {
               )}
             </div>
             <div className="text-xs text-slate-500 truncate">
-              {formatDate(tx.occurred_at)} ·{" "}
+              <ClientDate value={tx.occurred_at} /> ·{" "}
               {tx.category?.name || "Uncategorized"}
               {attribution && (
                 <span className="ml-1 text-slate-400">· {attribution}</span>

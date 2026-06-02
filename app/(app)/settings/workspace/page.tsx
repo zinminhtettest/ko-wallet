@@ -4,6 +4,7 @@ import Link from "next/link";
 import { InviteMemberForm } from "@/components/InviteMemberForm";
 import { RemoveMemberButton } from "@/components/RemoveMemberButton";
 import { Copy } from "lucide-react";
+import { ClientDate } from "@/components/ClientDate";
 
 export default async function WorkspaceSettingsPage() {
   const ctx = await getActiveWorkspace();
@@ -51,7 +52,7 @@ export default async function WorkspaceSettingsPage() {
             <li key={m.id} className="py-3 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="font-medium truncate">{userEmails[m.user_id] || m.user_id}</div>
-                <div className="text-xs text-slate-500">Joined {new Date(m.joined_at).toLocaleDateString()}</div>
+                <div className="text-xs text-slate-500">Joined <ClientDate value={m.joined_at} /></div>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${m.role === "owner" ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-700"}`}>
                 {m.role}

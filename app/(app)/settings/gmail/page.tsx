@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ImportNowButton } from "@/components/ImportNowButton";
 import { BankPicker } from "@/components/BankPicker";
 import { THAI_BANKS, labelForBankKey } from "@/lib/banks";
+import { ClientDate } from "@/components/ClientDate";
 
 export default async function GmailSettingsPage({
   searchParams,
@@ -74,7 +75,7 @@ export default async function GmailSettingsPage({
                 </div>
                 <p className="text-sm text-slate-600 mt-1">{conn.email}</p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Last sync: {conn.last_synced_at ? new Date(conn.last_synced_at).toLocaleString() : "Never"}
+                  Last sync: {conn.last_synced_at ? <ClientDate value={conn.last_synced_at} withTime /> : "Never"}
                 </p>
                 <p className="text-xs text-slate-500">
                   Banks: {bankKeys.length ? bankKeys.map(labelForBankKey).join(", ") : "All Thai banks"}

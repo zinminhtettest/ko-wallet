@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Target } from "lucide-react";
+import { ClientDate } from "@/components/ClientDate";
 
 type Goal = {
   id: string;
@@ -140,7 +141,7 @@ export function SavingsGoalsManager({ defaultCurrency }: { defaultCurrency: stri
                     </div>
                     {g.deadline && (
                       <div className="text-xs text-slate-500">
-                        Deadline: {new Date(g.deadline).toLocaleDateString()}
+                        Deadline: <ClientDate value={g.deadline} />
                       </div>
                     )}
                   </div>

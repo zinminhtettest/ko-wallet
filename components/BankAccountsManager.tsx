@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, X, Building2 } from "lucide-react";
+import { ClientDate } from "@/components/ClientDate";
 
 type Account = {
   id: string;
@@ -166,7 +167,7 @@ export function BankAccountsManager({ defaultCurrency }: { defaultCurrency: stri
                     <div className="text-xs text-slate-500">{a.account_label}</div>
                   )}
                   <div className="text-xs text-slate-400">
-                    Updated {new Date(a.last_updated_at).toLocaleDateString()}
+                    Updated <ClientDate value={a.last_updated_at} />
                   </div>
                 </div>
                 <button onClick={() => del(a)} className="p-1.5 hover:bg-red-50 rounded">

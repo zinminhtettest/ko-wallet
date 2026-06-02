@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { MessageCircle, Copy, Check, AlertTriangle, ArrowRightLeft } from "lucide-react";
+import { ClientDate } from "@/components/ClientDate";
 
 type State = {
   linked: boolean;
@@ -70,7 +71,7 @@ export function TelegramLinkPanel() {
             <div className="font-semibold">Connected to this wallet</div>
             <div className="text-sm text-slate-500">
               {state.username ? `@${state.username}` : `chat ${state.chat_id}`}
-              {state.linked_at ? ` · since ${new Date(state.linked_at).toLocaleDateString()}` : ""}
+              {state.linked_at ? <> · since <ClientDate value={state.linked_at} /></> : ""}
             </div>
           </div>
         </div>

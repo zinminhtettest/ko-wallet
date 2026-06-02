@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Pause, Play } from "lucide-react";
 import { Category } from "@/lib/types";
+import { ClientDate } from "@/components/ClientDate";
 
 type Rule = {
   id: string;
@@ -221,7 +222,7 @@ export function RecurringManager({ categories }: { categories: Category[] }) {
                   {!r.active && <span className="text-[10px] uppercase text-slate-400">paused</span>}
                 </div>
                 <div className="text-xs text-slate-500">
-                  {r.amount} {r.currency} · {r.frequency} · next {new Date(r.next_run_at).toLocaleDateString()}
+                  {r.amount} {r.currency} · {r.frequency} · next <ClientDate value={r.next_run_at} />
                   {r.categories?.name ? ` · ${r.categories.name}` : ""}
                 </div>
               </div>

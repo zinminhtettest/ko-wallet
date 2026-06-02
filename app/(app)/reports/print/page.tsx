@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { formatMoney } from "@/lib/utils";
 import { PrintButton } from "@/components/PrintButton";
+import { ClientDate } from "@/components/ClientDate";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,7 @@ export default async function PrintReportPage({
         <div className="text-slate-600">
           <div><b>Wallet:</b> {ctx.workspace.name}</div>
           <div><b>Period:</b> {monthLabel}</div>
-          <div><b>Generated:</b> {new Date().toLocaleString()}</div>
+          <div><b>Generated:</b> <ClientDate value={new Date()} withTime /></div>
         </div>
       </div>
 
@@ -147,7 +148,7 @@ export default async function PrintReportPage({
           {list.map((t) => (
             <tr key={t.id} className="border-b">
               <td className="py-1.5 whitespace-nowrap">
-                {new Date(t.occurred_at).toLocaleDateString()}
+                <ClientDate value={t.occurred_at} />
               </td>
               <td className="py-1.5">{t.kind}</td>
               <td className="py-1.5">{t.category?.name || "—"}</td>
