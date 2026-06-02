@@ -118,22 +118,36 @@ export function AppShell({
 
       {/* Main */}
       <main className="flex-1 min-w-0">
-        {/* Mobile top bar */}
+        {/* Mobile top bar — switcher + theme + bell only.
+            The "+ Add" action is a FAB at the bottom-right. */}
         <header className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <div className="flex-1 min-w-0">
             <WorkspaceSwitcher activeId={activeWorkspaceId} />
           </div>
           <ThemeToggle className="flex-shrink-0" />
           <NotificationBell className="w-9 h-9 flex-shrink-0" />
-          <Link
-            href="/transactions/new"
-            className="btn-primary py-1.5 px-3 text-xs flex-shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" /> Add
-          </Link>
         </header>
 
         <div className="px-4 py-5 md:px-8 md:py-8 pb-24 md:pb-8">{children}</div>
+
+        {/* Mobile FAB — quick add transaction (hidden on desktop and on
+            transaction-creation / edit flows where it would be redundant).
+            The check matches any sub-path of /transactions (e.g.
+            /transactions/new, /transactions/[id]/edit) but NOT the list
+            itself (/transactions). */}
+        {!(pathname && pathname !== "/transactions" && pathname.startsWith("/transactions/")) && (
+          <Link
+            href="/transactions/new"
+            aria-label="Add transaction"
+            className="md:hidden fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full text-white shadow-lg active:scale-95 transition grid place-items-center"
+            style={{
+              background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+              boxShadow: "0 8px 20px rgba(37, 99, 235, 0.4)",
+            }}
+          >
+            <Plus className="w-7 h-7" strokeWidth={2.5} />
+          </Link>
+        )}
 
         {/* Mobile bottom nav */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 grid grid-cols-4">

@@ -98,39 +98,42 @@ export default async function TransactionsPage({
     return `/transactions?${p.toString()}`;
   }
 
+  const exportHref = `/api/export?${new URLSearchParams({
+    ...(searchParams.preset ? { preset: searchParams.preset } : {}),
+    ...(searchParams.from ? { from: searchParams.from } : {}),
+    ...(searchParams.to ? { to: searchParams.to } : {}),
+    ...(searchParams.kind ? { kind: searchParams.kind } : {}),
+    ...(searchParams.currency ? { currency: searchParams.currency } : {}),
+  }).toString()}`;
+
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Transactions</h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             {list.length} records · {range.label}
           </p>
         </div>
-        <div className="flex gap-2">
+        {/* Desktop-only action row — mobile uses the chip row below */}
+        <div className="hidden md:flex gap-2 flex-shrink-0">
           <a
-            href={`/api/export?${new URLSearchParams({
-              ...(searchParams.preset ? { preset: searchParams.preset } : {}),
-              ...(searchParams.from ? { from: searchParams.from } : {}),
-              ...(searchParams.to ? { to: searchParams.to } : {}),
-              ...(searchParams.kind ? { kind: searchParams.kind } : {}),
-              ...(searchParams.currency ? { currency: searchParams.currency } : {}),
-            }).toString()}`}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+            href={exportHref}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             title="Export CSV (Excel-friendly)"
           >
             <Download className="w-4 h-4" /> Export
           </a>
           <Link
             href="/transactions/import"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             title="Bulk import CSV"
           >
             <Upload className="w-4 h-4" /> Import
           </Link>
           <Link
             href="/transactions/split"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             title="Split bill among family"
           >
             <Users className="w-4 h-4" /> Split
@@ -139,6 +142,28 @@ export default async function TransactionsPage({
             <Plus className="w-4 h-4" /> Add
           </Link>
         </div>
+      </div>
+
+      {/* Mobile-only quick actions chip row (FAB handles Add) */}
+      <div className="md:hidden flex gap-2 overflow-x-auto -mx-4 px-4 scrollbar-hide">
+        <a
+          href={exportHref}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0"
+        >
+          <Download className="w-3.5 h-3.5" /> Export
+        </a>
+        <Link
+          href="/transactions/import"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0"
+        >
+          <Upload className="w-3.5 h-3.5" /> Import
+        </Link>
+        <Link
+          href="/transactions/split"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0"
+        >
+          <Users className="w-3.5 h-3.5" /> Split
+        </Link>
       </div>
 
       <DateRangeFilter />
