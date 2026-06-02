@@ -49,6 +49,7 @@ export default async function AppLayout({
     <AppShell
       workspaceName={ctx.workspace.name}
       userEmail={ctx.user.email ?? ""}
+      activeWorkspaceId={ctx.workspace.id}
     >
       {children}
     </AppShell>

@@ -28,5 +28,32 @@ export async function POST(request: Request) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
   const url = `${appUrl}/invite/${data.token}`;
+
+  // Try to find an existing user with this email and create a notification.
+  try {
+    const { data: usersList } = await srv.auth.admin.listUsers();
+    const match = (usersList?.users || []).find(
+      (u: any) => (u.email || "").toLowerCase() === email.toLowerCase()
+    );
+    if (match) {
+      const inviterName =
+        (ctx.user.user_metadata as any)?.full_name ||
+        (ctx.user.user_metadata as any)?.name ||
+        ctx.user.email ||
+        "Someone";
+      await srv.from("notifications").insert({
+        user_id: match.id,
+        workspace_id: workspaceId,
+        kind: "invite",
+        title: `${inviterName} invited you to ${ctx.workspace.name}`,
+        body: "Click to accept",
+        link: `/invite/${data.token}`,
+      });
+    }
+  } catch (e) {
+    // Non-fatal — the invite link still works without an in-app notification.
+    console.log("[invites] notification insert failed:", (e as any)?.message);
+  }
+
   return NextResponse.json({ ok: true, url });
 }

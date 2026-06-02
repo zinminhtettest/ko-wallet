@@ -132,24 +132,31 @@ export function TransactionForm({
       <div>
         <label className="label">Category</label>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-          {filteredCats.map((c) => (
-            <button
-              type="button"
-              key={c.id}
-              onClick={() => setCategoryId(c.id)}
-              className={`p-3 rounded-xl border text-sm flex flex-col items-center gap-1.5 ${
-                categoryId === c.id ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:bg-slate-50"
-              }`}
-            >
-              <div
-                className="w-8 h-8 rounded-lg grid place-items-center text-white text-[10px] font-bold"
-                style={{ background: c.color }}
+          {filteredCats.map((c) => {
+            const isEmoji = !/^[a-z\-]+$/i.test(c.icon);
+            return (
+              <button
+                type="button"
+                key={c.id}
+                onClick={() => setCategoryId(c.id)}
+                className={`p-3 rounded-xl border text-sm flex flex-col items-center gap-1.5 ${
+                  categoryId === c.id ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
               >
-                {c.name.slice(0, 2).toUpperCase()}
-              </div>
-              <span className="text-xs">{c.name}</span>
-            </button>
-          ))}
+                <div
+                  className="w-8 h-8 rounded-lg grid place-items-center text-white text-[10px] font-bold"
+                  style={{ background: c.color }}
+                >
+                  {isEmoji ? (
+                    <span className="text-base leading-none">{c.icon}</span>
+                  ) : (
+                    c.name.slice(0, 2).toUpperCase()
+                  )}
+                </div>
+                <span className="text-xs">{c.name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -9,7 +9,7 @@ export default async function AcceptInvitePage({ params }: { params: { token: st
   const srv = createServiceClient();
   const { data: invite } = await srv
     .from("workspace_invites")
-    .select("id, workspace_id, email, accepted, workspaces(name)")
+    .select("id, workspace_id, email, accepted, workspaces(name, owner_id)")
     .eq("token", params.token)
     .maybeSingle();
 
@@ -47,6 +47,25 @@ export default async function AcceptInvitePage({ params }: { params: { token: st
     { onConflict: "workspace_id,user_id" }
   );
   await srv.from("workspace_invites").update({ accepted: true }).eq("id", invite.id);
+
+  // Notify the workspace owner that someone joined.
+  try {
+    const ws = (invite as any).workspaces;
+    const ownerId: string | undefined = ws?.owner_id;
+    const wsName: string = ws?.name || "your wallet";
+    if (ownerId && ownerId !== user!.id) {
+      await srv.from("notifications").insert({
+        user_id: ownerId,
+        workspace_id: invite.workspace_id,
+        kind: "system",
+        title: `${user!.email || "Someone"} joined your wallet`,
+        body: `${user!.email || "A new member"} accepted your invite to ${wsName}.`,
+        link: "/settings/workspace",
+      });
+    }
+  } catch (e) {
+    console.log("[invite-accept] notification insert failed:", (e as any)?.message);
+  }
 
   redirect("/dashboard");
 }
