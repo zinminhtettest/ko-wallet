@@ -23,6 +23,7 @@ type Existing = {
   merchant: string | null;
   category_id: string | null;
   occurred_at: string;
+  tax_deductible?: boolean;
 };
 
 type Prefill = {
@@ -65,6 +66,9 @@ export function TransactionForm({
   const [occurredAt, setOccurredAt] = useState(
     toLocalDatetimeInput(existing?.occurred_at || prefill?.occurred_at || new Date().toISOString())
   );
+  const [taxDeductible, setTaxDeductible] = useState<boolean>(
+    !!existing?.tax_deductible
+  );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -89,7 +93,7 @@ export function TransactionForm({
       (user.user_metadata as any)?.name ||
       user.email?.split("@")[0] ||
       null;
-    const row = {
+    const row: any = {
       workspace_id: workspaceId,
       user_id: user.id,
       amount: amt,
@@ -100,8 +104,9 @@ export function TransactionForm({
       note: note || null,
       occurred_at: new Date(occurredAt).toISOString(),
       source: "manual",
-      created_by_name: existing ? undefined : displayName,
+      tax_deductible: taxDeductible,
     };
+    if (!existing) row.created_by_name = displayName;
     const op = existing
       ? supabase.from("transactions").update(row).eq("id", existing.id)
       : supabase.from("transactions").insert(row);
@@ -214,6 +219,16 @@ export function TransactionForm({
           onChange={(e) => setOccurredAt(e.target.value)}
         />
       </div>
+
+      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={taxDeductible}
+          onChange={(e) => setTaxDeductible(e.target.checked)}
+          className="rounded"
+        />
+        💼 Tax-deductible (business expense)
+      </label>
 
       {err && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{err}</div>}
 

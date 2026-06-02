@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { parseRangeFromSearchParams } from "@/lib/date-range";
 import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { TransactionFilters } from "@/components/TransactionFilters";
 import { TransactionRow } from "@/components/TransactionRow";
 import Link from "next/link";
 import { Plus, Download } from "lucide-react";
@@ -9,7 +10,17 @@ import { Plus, Download } from "lucide-react";
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: { kind?: string; currency?: string; preset?: string; from?: string; to?: string };
+  searchParams: {
+    kind?: string;
+    currency?: string;
+    preset?: string;
+    from?: string;
+    to?: string;
+    q?: string;
+    min?: string;
+    max?: string;
+    tax?: string;
+  };
 }) {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
@@ -19,7 +30,7 @@ export default async function TransactionsPage({
   let q = supabase
     .from("transactions")
     .select(
-      "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, created_by_name, telegram_username, category:categories(name, icon, color)"
+      "id, amount, currency, kind, note, merchant, occurred_at, created_at, source, created_by_name, telegram_username, tax_deductible, category:categories(name, icon, color)"
     )
     .eq("workspace_id", ctx.workspace.id)
     .gte("occurred_at", range.from.toISOString())
@@ -32,6 +43,21 @@ export default async function TransactionsPage({
   }
   if (searchParams.currency) {
     q = q.eq("currency", searchParams.currency);
+  }
+  if (searchParams.tax === "1") {
+    q = q.eq("tax_deductible", true);
+  }
+  if (searchParams.min) {
+    const min = parseFloat(searchParams.min);
+    if (!isNaN(min)) q = q.gte("amount", min);
+  }
+  if (searchParams.max) {
+    const max = parseFloat(searchParams.max);
+    if (!isNaN(max)) q = q.lte("amount", max);
+  }
+  if (searchParams.q) {
+    const term = searchParams.q.replace(/[%_]/g, "");
+    q = q.or(`merchant.ilike.%${term}%,note.ilike.%${term}%`);
   }
 
   const { data: txs } = await q;
@@ -86,6 +112,8 @@ export default async function TransactionsPage({
         <FilterChip href={withKind("expense")} label="Expenses" active={searchParams.kind === "expense"} />
         <FilterChip href={withKind("income")} label="Income" active={searchParams.kind === "income"} />
       </div>
+
+      <TransactionFilters />
 
       <div className="card overflow-hidden">
         {list.length === 0 ? (

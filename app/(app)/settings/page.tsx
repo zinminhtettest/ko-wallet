@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, Mail, Wallet, Tag, Repeat, PieChart, MessageCircle, ArrowRightLeft, Send } from "lucide-react";
+import { Users, Mail, Wallet, Tag, Repeat, PieChart, MessageCircle, ArrowRightLeft, Send, Target } from "lucide-react";
 import { getActiveWorkspace } from "@/lib/workspace";
 
 export default async function SettingsPage() {
@@ -95,6 +95,17 @@ export default async function SettingsPage() {
         <div className="flex-1">
           <div className="font-semibold">Transfer Between Wallets</div>
           <div className="text-sm text-slate-500">Move money from one wallet to another</div>
+        </div>
+        <div className="text-slate-400">→</div>
+      </Link>
+
+      <Link href="/settings/goals" className="card p-5 flex items-center gap-4 hover:bg-slate-50">
+        <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 grid place-items-center">
+          <Target className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold">Saving Goals</div>
+          <div className="text-sm text-slate-500">Set targets and track progress</div>
         </div>
         <div className="text-slate-400">→</div>
       </Link>
