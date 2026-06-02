@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { DialogProvider } from "@/components/DialogProvider";
 
 export const metadata: Metadata = {
   title: "Ko Wallet — Family Money Tracker",
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="font-sans antialiased min-h-screen">
-        {children}
+        <DialogProvider>{children}</DialogProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

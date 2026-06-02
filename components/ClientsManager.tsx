@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Users, Receipt } from "lucide-react";
+import { useDialog } from "@/components/DialogProvider";
 
 type Invoice = { amount: number; currency: string; status: string };
 type Client = {
@@ -12,6 +13,7 @@ type Client = {
 };
 
 export function ClientsManager({ defaultCurrency }: { defaultCurrency: string }) {
+  const dialog = useDialog();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -55,7 +57,7 @@ export function ClientsManager({ defaultCurrency }: { defaultCurrency: string })
   }
 
   async function delClient(c: Client) {
-    if (!confirm(`Delete client "${c.name}"? All invoices for this client will be removed too.`)) return;
+    if (!(await dialog.confirm({ message: `Delete client "${c.name}"? All invoices for this client will be removed too.`, destructive: true }))) return;
     await fetch(`/api/clients/${c.id}`, { method: "DELETE" });
     load();
   }

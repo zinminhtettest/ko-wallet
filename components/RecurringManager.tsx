@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2, Pause, Play } from "lucide-react";
 import { Category } from "@/lib/types";
 import { ClientDate } from "@/components/ClientDate";
+import { useDialog } from "@/components/DialogProvider";
 
 type Rule = {
   id: string;
@@ -22,6 +23,7 @@ type Rule = {
 
 export function RecurringManager({ categories }: { categories: Category[] }) {
   const router = useRouter();
+  const dialog = useDialog();
   const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -95,7 +97,7 @@ export function RecurringManager({ categories }: { categories: Category[] }) {
   }
 
   async function del(rule: Rule) {
-    if (!confirm(`Delete "${rule.name}"?`)) return;
+    if (!(await dialog.confirm({ message: `Delete "${rule.name}"?`, destructive: true }))) return;
     await fetch(`/api/recurring/${rule.id}`, { method: "DELETE" });
     load();
   }

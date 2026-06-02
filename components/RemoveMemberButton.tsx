@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserMinus } from "lucide-react";
+import { useDialog } from "@/components/DialogProvider";
 
 export function RemoveMemberButton({
   memberId,
@@ -11,16 +12,17 @@ export function RemoveMemberButton({
   email: string;
 }) {
   const router = useRouter();
+  const dialog = useDialog();
   const [busy, setBusy] = useState(false);
 
   async function onClick() {
-    if (!confirm(`Remove ${email} from this wallet?\n\nAll their transactions stay in the wallet — they just lose access.`)) return;
+    if (!(await dialog.confirm({ message: `Remove ${email} from this wallet?\n\nAll their transactions stay in the wallet — they just lose access.`, destructive: true }))) return;
     setBusy(true);
     const r = await fetch(`/api/workspace/members/${memberId}`, { method: "DELETE" });
     const j = await r.json().catch(() => ({}));
     setBusy(false);
     if (!r.ok) {
-      alert(j?.error || "Remove failed");
+      dialog.notify({ kind: "error", message: j?.error || "Remove failed" });
       return;
     }
     router.refresh();

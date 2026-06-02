@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Category } from "@/lib/types";
+import { useDialog } from "@/components/DialogProvider";
 
 type Budget = {
   id: string;
@@ -23,6 +24,7 @@ type Status = {
 };
 
 export function BudgetManager({ categories }: { categories: Category[] }) {
+  const dialog = useDialog();
   const expenseCats = categories.filter((c) => c.kind === "expense");
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [status, setStatus] = useState<Status[]>([]);
@@ -62,7 +64,7 @@ export function BudgetManager({ categories }: { categories: Category[] }) {
   }
 
   async function del(b: Budget) {
-    if (!confirm("Delete this budget?")) return;
+    if (!(await dialog.confirm({ message: "Delete this budget?", destructive: true }))) return;
     await fetch(`/api/budgets/${b.id}`, { method: "DELETE" });
     load();
   }

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, X, Building2 } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
+import { useDialog } from "@/components/DialogProvider";
 
 type Account = {
   id: string;
@@ -13,6 +14,7 @@ type Account = {
 };
 
 export function BankAccountsManager({ defaultCurrency }: { defaultCurrency: string }) {
+  const dialog = useDialog();
   const [list, setList] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -58,7 +60,7 @@ export function BankAccountsManager({ defaultCurrency }: { defaultCurrency: stri
   }
 
   async function del(a: Account) {
-    if (!confirm(`Delete account "${a.bank_name}"?`)) return;
+    if (!(await dialog.confirm({ message: `Delete account "${a.bank_name}"?`, destructive: true }))) return;
     await fetch(`/api/bank-accounts/${a.id}`, { method: "DELETE" });
     load();
   }

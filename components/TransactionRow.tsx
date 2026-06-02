@@ -6,6 +6,7 @@ import { Mail, MessageCircle, Mic, Camera, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatMoney } from "@/lib/utils";
 import { ClientDate } from "@/components/ClientDate";
+import { useDialog } from "@/components/DialogProvider";
 
 type Tx = {
   id: string;
@@ -24,16 +25,17 @@ type Tx = {
 export function TransactionRow({ tx }: { tx: Tx }) {
   const router = useRouter();
   const supabase = createClient();
+  const dialog = useDialog();
   const [deleting, setDeleting] = useState(false);
 
   async function onDelete(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Delete this transaction?")) return;
+    if (!(await dialog.confirm({ message: "Delete this transaction?", destructive: true }))) return;
     setDeleting(true);
     const { error } = await supabase.from("transactions").delete().eq("id", tx.id);
     if (error) {
-      alert("Delete failed: " + error.message);
+      dialog.notify({ kind: "error", message: "Delete failed: " + error.message });
       setDeleting(false);
       return;
     }

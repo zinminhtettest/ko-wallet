@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Edit2, Trash2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Category, TxKind } from "@/lib/types";
+import { useDialog } from "@/components/DialogProvider";
 
 const PRESET_COLORS = [
   "#ef4444",
@@ -58,6 +59,7 @@ function IconBadge({ icon, color, name }: { icon: string; color: string; name: s
 
 export function CategoryManager({ initialCategories }: { initialCategories: Category[] }) {
   const router = useRouter();
+  const dialog = useDialog();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -134,10 +136,10 @@ export function CategoryManager({ initialCategories }: { initialCategories: Cate
 
   async function remove(c: Category) {
     if (c.is_system) {
-      alert("System category တွေ delete မလုပ်နိုင်ပါ။");
+      dialog.notify({ kind: "error", message: "System category တွေ delete မလုပ်နိုင်ပါ။" });
       return;
     }
-    if (!confirm(`Delete "${c.name}" — သေချာလား?`)) return;
+    if (!(await dialog.confirm({ message: `Delete "${c.name}" — သေချာလား?`, destructive: true }))) return;
     setBusy(true);
     try {
       const r = await fetch(`/api/categories/${c.id}`, { method: "DELETE" });
@@ -146,7 +148,7 @@ export function CategoryManager({ initialCategories }: { initialCategories: Cate
       setCategories((prev) => prev.filter((x) => x.id !== c.id));
       router.refresh();
     } catch (e: any) {
-      alert(e.message);
+      dialog.notify({ kind: "error", message: e.message });
     } finally {
       setBusy(false);
     }

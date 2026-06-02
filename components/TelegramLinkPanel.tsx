@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, Copy, Check, AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
+import { useDialog } from "@/components/DialogProvider";
 
 type State = {
   linked: boolean;
@@ -17,6 +18,7 @@ type State = {
 };
 
 export function TelegramLinkPanel() {
+  const dialog = useDialog();
   const [state, setState] = useState<State | null>(null);
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,7 +51,7 @@ export function TelegramLinkPanel() {
   }
 
   async function unlink() {
-    if (!confirm("Disconnect Telegram?")) return;
+    if (!(await dialog.confirm({ message: "Disconnect Telegram?", destructive: true }))) return;
     await fetch("/api/telegram/link", { method: "DELETE" });
     setCode(null);
     await load();

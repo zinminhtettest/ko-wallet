@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
+import { useDialog } from "@/components/DialogProvider";
 
 export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
+  const dialog = useDialog();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
 
   async function copy() {
     if (!link) return;
-    try { await navigator.clipboard.writeText(link); alert("Link copied!"); } catch {}
+    try { await navigator.clipboard.writeText(link); dialog.notify({ kind: "success", message: "Link copied!" }); } catch {}
   }
 
   return (

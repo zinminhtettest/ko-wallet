@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Category, Currency, TxKind } from "@/lib/types";
 import { Trash2 } from "lucide-react";
 import { VoiceCaptureButton } from "@/components/VoiceCaptureButton";
+import { useDialog } from "@/components/DialogProvider";
 
 // Convert a stored ISO timestamp (UTC) to the "YYYY-MM-DDTHH:mm" format that
 // <input type="datetime-local"> expects in the BROWSER'S local timezone.
@@ -51,6 +52,7 @@ export function TransactionForm({
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const dialog = useDialog();
 
   const [kind, setKind] = useState<TxKind>((existing?.kind as TxKind) || "expense");
   const [amount, setAmount] = useState<string>(
@@ -158,7 +160,7 @@ export function TransactionForm({
 
   async function onDelete() {
     if (!existing) return;
-    if (!confirm("Delete this transaction?")) return;
+    if (!(await dialog.confirm({ message: "Delete this transaction?", destructive: true }))) return;
     const { error } = await supabase.from("transactions").delete().eq("id", existing.id);
     if (error) { setErr(error.message); return; }
     router.push("/transactions");

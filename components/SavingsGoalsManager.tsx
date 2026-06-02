@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Target } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
+import { useDialog } from "@/components/DialogProvider";
 
 type Goal = {
   id: string;
@@ -14,6 +15,7 @@ type Goal = {
 };
 
 export function SavingsGoalsManager({ defaultCurrency }: { defaultCurrency: string }) {
+  const dialog = useDialog();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -56,7 +58,7 @@ export function SavingsGoalsManager({ defaultCurrency }: { defaultCurrency: stri
   }
 
   async function del(g: Goal) {
-    if (!confirm(`Delete goal "${g.name}"?`)) return;
+    if (!(await dialog.confirm({ message: `Delete goal "${g.name}"?`, destructive: true }))) return;
     await fetch(`/api/goals/${g.id}`, { method: "DELETE" });
     load();
   }

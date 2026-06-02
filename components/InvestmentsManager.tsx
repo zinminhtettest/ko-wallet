@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, TrendingUp, TrendingDown, Pencil, X } from "lucide-react";
+import { useDialog } from "@/components/DialogProvider";
 
 type Investment = {
   id: string;
@@ -21,6 +22,7 @@ type Investment = {
 const TYPES = ["stock", "crypto", "gold", "bond", "etf", "other"];
 
 export function InvestmentsManager() {
+  const dialog = useDialog();
   const [list, setList] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -74,7 +76,7 @@ export function InvestmentsManager() {
   }
 
   async function del(p: Investment) {
-    if (!confirm(`Delete ${p.symbol}?`)) return;
+    if (!(await dialog.confirm({ message: `Delete ${p.symbol}?`, destructive: true }))) return;
     await fetch(`/api/investments/${p.id}`, { method: "DELETE" });
     load();
   }
