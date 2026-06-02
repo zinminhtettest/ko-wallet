@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import Link from "next/link";
 import { InviteMemberForm } from "@/components/InviteMemberForm";
+import { RemoveMemberButton } from "@/components/RemoveMemberButton";
 import { Copy } from "lucide-react";
 
 export default async function WorkspaceSettingsPage() {
@@ -47,14 +48,17 @@ export default async function WorkspaceSettingsPage() {
         <h3 className="font-semibold mb-3">Members ({members?.length ?? 0})</h3>
         <ul className="divide-y divide-slate-100">
           {(members ?? []).map((m: any) => (
-            <li key={m.id} className="py-3 flex items-center justify-between">
-              <div>
-                <div className="font-medium">{userEmails[m.user_id] || m.user_id}</div>
+            <li key={m.id} className="py-3 flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="font-medium truncate">{userEmails[m.user_id] || m.user_id}</div>
                 <div className="text-xs text-slate-500">Joined {new Date(m.joined_at).toLocaleDateString()}</div>
               </div>
-              <span className={`text-xs px-2 py-1 rounded-full ${m.role === "owner" ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-700"}`}>
+              <span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${m.role === "owner" ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-700"}`}>
                 {m.role}
               </span>
+              {ctx.role === "owner" && m.role !== "owner" && m.user_id !== ctx.user.id && (
+                <RemoveMemberButton memberId={m.id} email={userEmails[m.user_id] || m.user_id} />
+              )}
             </li>
           ))}
         </ul>

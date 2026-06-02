@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Trigger Vercel cron endpoint
+      - name: Bank sync
         env:
           APP_URL: https://kowallet.vercel.app
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -30,4 +30,19 @@ jobs:
           if [ "$status" != "200" ]; then
             echo "::error::Sync failed with HTTP $status"
             exit 1
+          fi
+
+      - name: Digest dispatch (sends to any user whose digest time matches now)
+        env:
+          APP_URL: https://kowallet.vercel.app
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          echo "Hitting ${APP_URL}/api/cron/digest ..."
+          response=$(curl -sS -X GET "${APP_URL}/api/cron/digest" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP_STATUS:%{http_code}")
+          echo "$response"
+          status=$(echo "$response" | tail -1 | sed 's/HTTP_STATUS://')
+          if [ "$status" != "200" ]; then
+            echo "::warning::Digest call returned HTTP $status (non-fatal)"
           fi
