@@ -93,7 +93,6 @@ async function callDeepSeek(prompt: string) {
   if (!process.env.DEEPSEEK_API_KEY) {
     throw new Error("DeepSeek API key not configured (DEEPSEEK_API_KEY)");
   }
-  // deepseek-chat = current production model (DeepSeek-V3.x family, mapped as user's "V4 pro" alias)
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
     headers: {
@@ -114,14 +113,43 @@ async function callDeepSeek(prompt: string) {
       temperature: 0.2,
     }),
   });
+
+  const rawBody = await res.text();
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`DeepSeek HTTP ${res.status}: ${errText.slice(0, 200)}`);
+    throw new Error(
+      `DeepSeek HTTP ${res.status}: ${rawBody.slice(0, 300)}`
+    );
   }
-  const j = await res.json();
+
+  let j: any;
+  try {
+    j = JSON.parse(rawBody);
+  } catch {
+    throw new Error(
+      `DeepSeek returned non-JSON envelope: ${rawBody.slice(0, 300)}`
+    );
+  }
+
+  // Upstream API error wrapped in 200 OK (sometimes happens with quota issues)
+  if (j?.error) {
+    const m = j.error?.message || JSON.stringify(j.error);
+    throw new Error(`DeepSeek error: ${String(m).slice(0, 300)}`);
+  }
+
   const content = j?.choices?.[0]?.message?.content;
-  if (!content) throw new Error("DeepSeek returned empty response");
-  return JSON.parse(content);
+  if (!content) {
+    throw new Error(
+      `DeepSeek returned no content. Raw: ${rawBody.slice(0, 300)}`
+    );
+  }
+
+  try {
+    return JSON.parse(content);
+  } catch {
+    throw new Error(
+      `DeepSeek content was not JSON. Content: ${String(content).slice(0, 300)}`
+    );
+  }
 }
 
 export async function POST(request: Request) {
