@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   if (body.base_currency) upd.base_currency = body.base_currency;
   if (body.rate_thb_to_mmk != null) upd.rate_thb_to_mmk = Number(body.rate_thb_to_mmk);
   if (body.rate_thb_to_usd != null) upd.rate_thb_to_usd = Number(body.rate_thb_to_usd);
-  if (body.ui_language && ["en", "my", "th"].includes(body.ui_language)) {
+  if (body.ui_language && ["en", "my", "th", "both"].includes(body.ui_language)) {
     upd.ui_language = body.ui_language;
   }
   // For an upsert without specifying defaults, fill them when row doesn't exist:

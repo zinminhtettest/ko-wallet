@@ -16,7 +16,7 @@ export async function getUserLang(): Promise<Lang> {
       .eq("user_id", user.id)
       .maybeSingle();
     const v = data?.ui_language;
-    if (v === "my" || v === "th" || v === "en") return v;
+    if (v === "my" || v === "th" || v === "en" || v === "both") return v;
     return "en";
   } catch {
     return "en";
