@@ -180,16 +180,6 @@ export default async function SettingsPage() {
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
 
-      <div className="card p-5 flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 grid place-items-center">
-          <Wallet className="w-5 h-5" />
-        </div>
-        <div className="flex-1">
-          <div className="font-semibold">{ctx.workspace.name}</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Default currency: {ctx.workspace.default_currency}</div>
-        </div>
-      </div>
-
       {/* Sign out (visible on mobile + desktop) */}
       <form action="/auth/signout" method="POST" className="md:hidden">
         <button
