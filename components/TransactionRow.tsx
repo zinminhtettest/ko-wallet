@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatMoney } from "@/lib/utils";
 import { ClientDate } from "@/components/ClientDate";
 import { useDialog } from "@/components/DialogProvider";
+import { shortenTransferLabel } from "@/lib/format-transaction";
 
 type Tx = {
   id: string;
@@ -66,12 +67,20 @@ export function TransactionRow({ tx }: { tx: Tx }) {
       break;
   }
 
-  // Build attribution label: prefer telegram_username over name
+  // Build attribution label: prefer Telegram username; for email-sourced
+  // transactions show "Mail@<username>"; otherwise show creator name.
   const attribution = tx.telegram_username
     ? `Tg ${tx.telegram_username}`
+    : tx.source === "krungthai_email" && tx.created_by_name
+    ? `Mail@${tx.created_by_name}`
     : tx.created_by_name
     ? tx.created_by_name
     : null;
+
+  // Shorten "Transfer to own [Bank Name] account" → "Transfer to own — BBL"
+  const headline = shortenTransferLabel(
+    tx.merchant || tx.note || tx.category?.name || "Transaction"
+  );
 
   return (
     <li>
@@ -92,7 +101,7 @@ export function TransactionRow({ tx }: { tx: Tx }) {
           </div>
           <div className="min-w-0">
             <div className="font-medium truncate flex items-center gap-1.5">
-              {tx.merchant || tx.note || tx.category?.name || "Transaction"}
+              {headline}
               {SourceIcon && (
                 <span title={sourceTitle}>
                   <SourceIcon className="w-3 h-3 text-brand-500 flex-shrink-0" />

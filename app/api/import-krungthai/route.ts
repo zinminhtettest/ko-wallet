@@ -3,6 +3,7 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { gmailClient, extractText } from "@/lib/gmail";
 import { parseKrungthaiEmail } from "@/lib/gemini";
 import { allDefaultSenders, sendersForBankKeys } from "@/lib/banks";
+import { emailUsername } from "@/lib/format-transaction";
 import { NextResponse } from "next/server";
 
 /**
@@ -160,7 +161,11 @@ export async function POST(request: Request) {
           category_id = cat?.id ?? null;
         }
 
-        const { error: insertErr } = await srv.from("transactions").insert({
+        // Stamp the Gmail account's username (before @) so the UI can show a
+        // "Mail@<username>" attribution similar to the Telegram one.
+        const mailUser = emailUsername(conn.email);
+
+        const baseRow: any = {
           workspace_id: conn.workspace_id,
           user_id: conn.user_id,
           category_id,
@@ -173,7 +178,19 @@ export async function POST(request: Request) {
           source: "krungthai_email",
           source_ref: m.id,
           raw_email: text.slice(0, 2000),
-        });
+          created_by_name: mailUser,
+        };
+
+        let { error: insertErr } = await srv.from("transactions").insert(baseRow);
+        if (insertErr) {
+          const msg = (insertErr.message || "").toLowerCase();
+          // Older schemas may not have created_by_name — retry without it.
+          if (msg.includes("created_by_name") || msg.includes("schema cache")) {
+            const { created_by_name: _drop, ...stripped } = baseRow;
+            const res2 = await srv.from("transactions").insert(stripped);
+            insertErr = res2.error;
+          }
+        }
 
         if (insertErr) {
           totalErrors++;
