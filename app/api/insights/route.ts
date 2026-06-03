@@ -12,64 +12,36 @@ const LANG_LABEL: Record<string, string> = {
 };
 
 function buildPrompt(language: string, wsName: string, defaultCurrency: string) {
-  return `You are a careful personal-finance AI advisor for the wallet "${wsName}".
-The user wants ACCURATE insights for the LAST 6 WEEKS of their transactions.
+  return `You are a personal-finance advisor for the wallet "${wsName}".
+The user gives you a pre-computed 6-week summary. Use the numbers EXACTLY as given.
 
-═══ ACCURACY REQUIREMENTS (CRITICAL) ═══
-1. Before writing anything, compute these totals from the raw data:
-   - total_income (sum of all kind="income")
-   - total_expense (sum of all kind="expense")
-   - net = total_income − total_expense
-   - per-category expense sums (group by "cat")
-   - per-merchant expense sums (group by "m")
-2. Every number you mention MUST match these computed totals exactly.
-3. Do NOT invent transactions, categories, or merchants that aren't in the data.
-4. Round to whole currency units; never invent decimals.
-
-═══ ESSENTIAL vs WASTE CLASSIFICATION ═══
-Classify EVERY expense as one of:
-- "essential" (လိုအပ်တာ): food groceries, rent, bills, transport-to-work, healthcare, education, basic utilities
-- "discretionary" (လိုလားတာ): dining out moderately, hobbies, modest entertainment, gifts
-- "waste" (အဖြုန်း): excessive dining/coffee, impulse shopping, unused subscriptions, splurges, anything the user is unlikely to repeat or value
-
-Then compute:
-- essential_total, discretionary_total, waste_total (sums in ${defaultCurrency})
-- waste_pct = waste_total / total_expense × 100
-
-═══ OUTPUT (ONLY this JSON, no markdown) ═══
+Output ONLY JSON (no markdown):
 {
-  "summary": "1-2 sentence honest assessment with the exact net figure",
+  "summary": "1 sentence overall assessment with the net figure",
   "cards": [
     {
-      "icon": "💸" | "💰" | "📊" | "⚠️" | "✅" | "🎯" | "🍔" | "🚗" | "📈" | "📉" | "🛒" | "🏠",
-      "title": "string",
-      "value": "string with the exact number",
-      "body": "1-2 sentence explanation citing real categories/merchants from the data",
-      "recommendation": "concrete action with an estimated saving in ${defaultCurrency}",
+      "icon": "💸" | "💰" | "📊" | "⚠️" | "✅" | "🎯" | "🍔" | "📈" | "📉" | "🛒",
+      "title": "short string",
+      "value": "the headline number",
+      "body": "1 sentence explanation (max 20 words)",
+      "recommendation": "1 sentence concrete action with estimated saving in ${defaultCurrency} (max 20 words)",
       "tone": "positive" | "warning" | "info"
     }
   ]
 }
 
-═══ REQUIRED CARDS (6–8 cards total, in this order) ═══
-1. Net flow — income vs expense, surplus or deficit (exact ${defaultCurrency} figures)
-2. Essential vs Waste split — show essential_total, discretionary_total, waste_total, and waste_pct%
-3. Top spending category — name + amount + % of total_expense
-4. Top merchant — name + how many visits + total spent
-5. Biggest waste item — single category or merchant flagged as wasteful, with why
-6. Trend — last 1 week vs avg of prior 5 weeks (% change), is it improving or worsening
-7. Recommendation — ONE specific, actionable change with estimated monthly saving
-8. Optional Achievement (only if income > expense OR waste_pct < 15%)
+Make 4 cards:
+1. Net flow — income vs expense
+2. Top category — biggest expense category + % of total
+3. Top merchant — most-spent merchant + visit count
+4. One recommendation — concrete action with estimated saving
 
-═══ LANGUAGE ═══
-Write ALL string fields in <b>${LANG_LABEL[language] || "English"}</b>.
-- Burmese: Myanmar Unicode, mix English for numbers/categories where natural.
+Language: ALL string fields in <b>${LANG_LABEL[language] || "English"}</b>.
+- Burmese: Myanmar Unicode mixed with English numbers/category names.
 - Thai: Thai script, comma-separated numbers.
 - English: casual but precise.
 
-CURRENCY: Default ${defaultCurrency}. Use comma separators (e.g. 2,540). If multiple currencies appear, report each separately — do NOT mix them in one total.
-
-Be specific. Cite real names. No platitudes. Numbers MUST match the data.`;
+Numbers MUST match the pre-computed summary exactly. Use comma separators (e.g. 2,540 ${defaultCurrency}).`;
 }
 
 async function callGemini(prompt: string) {
@@ -218,9 +190,66 @@ export async function POST(request: Request) {
     });
   }
 
-  // Compact rows for the prompt — limit to 100 most recent transactions so
-  // V4 Flash can return JSON within Vercel's 60s function budget.
-  const compact = list.slice(0, 100).map((t) => ({
+  // Pre-aggregate server-side so the prompt to the AI is tiny — that's the
+  // single biggest factor in keeping response time under Vercel's 60s budget.
+  let totalIncome = 0;
+  let totalExpense = 0;
+  const byCategory: Record<string, number> = {};
+  const byMerchant: Record<string, { sum: number; count: number }> = {};
+  const weeklyExpense: Record<string, number> = {}; // yyyy-WW → sum
+  const baseCcy = ctx.workspace.default_currency || "THB";
+  for (const t of list) {
+    const amt = Number(t.amount);
+    if (t.currency !== baseCcy) continue; // skip cross-currency; keep it simple
+    if (t.kind === "income") totalIncome += amt;
+    else {
+      totalExpense += amt;
+      const cat = t.category?.name || "Uncategorized";
+      byCategory[cat] = (byCategory[cat] || 0) + amt;
+      const mk = t.merchant || t.note || "Other";
+      byMerchant[mk] = byMerchant[mk] || { sum: 0, count: 0 };
+      byMerchant[mk].sum += amt;
+      byMerchant[mk].count += 1;
+      // ISO week bucket
+      const d = new Date(t.occurred_at);
+      const wk = `${d.getUTCFullYear()}-W${Math.ceil(
+        ((d.getTime() - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000 +
+          new Date(Date.UTC(d.getUTCFullYear(), 0, 1)).getUTCDay() +
+          1) /
+          7
+      )}`;
+      weeklyExpense[wk] = (weeklyExpense[wk] || 0) + amt;
+    }
+  }
+  const topCategories = Object.entries(byCategory)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name, sum]) => ({ name, sum: Math.round(sum) }));
+  const topMerchants = Object.entries(byMerchant)
+    .sort((a, b) => b[1].sum - a[1].sum)
+    .slice(0, 8)
+    .map(([name, v]) => ({
+      name,
+      sum: Math.round(v.sum),
+      count: v.count,
+    }));
+  const weeklyTrend = Object.entries(weeklyExpense)
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .slice(-6)
+    .map(([wk, sum]) => ({ wk, sum: Math.round(sum) }));
+  const summary = {
+    currency: baseCcy,
+    income: Math.round(totalIncome),
+    expense: Math.round(totalExpense),
+    net: Math.round(totalIncome - totalExpense),
+    tx_count: list.length,
+    top_categories: topCategories,
+    top_merchants: topMerchants,
+    weekly_expense: weeklyTrend,
+  };
+
+  // Tiny back-compat object retained but unused for the AI prompt.
+  const compact = list.slice(0, 0).map((t) => ({
     d: t.occurred_at.slice(0, 10),
     k: t.kind,
     a: Number(t.amount),
@@ -234,7 +263,10 @@ export async function POST(request: Request) {
     lang,
     ctx.workspace.name,
     ctx.workspace.default_currency
-  )}\n\nTransactions JSON (last 6 weeks):\n${JSON.stringify(compact)}`;
+  )}\n\nPre-computed summary (USE THESE NUMBERS EXACTLY — do NOT recompute):\n${JSON.stringify(
+    summary
+  )}`;
+  void compact;
 
   try {
     const parsed =
