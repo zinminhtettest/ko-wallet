@@ -9,18 +9,29 @@ import { getActiveWorkspace } from "@/lib/workspace";
  * the caller and the user redirected (a new "My" wallet will be auto-created
  * by getActiveWorkspace's bootstrap on the next request).
  */
-export async function POST() {
+export async function POST(request: Request) {
   const ctx = await getActiveWorkspace();
   if (!ctx) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (ctx.role !== "owner") {
+  const body = await request.json().catch(() => ({}));
+  const wsId: string = (body?.workspaceId || ctx.workspace.id).toString();
+
+  const supabase = createClient();
+  // delete_workspace RPC enforces owner check via auth.uid() — but verify
+  // upfront so we return a cleaner 403 instead of a generic 500.
+  const { data: member } = await supabase
+    .from("workspace_members")
+    .select("role")
+    .eq("workspace_id", wsId)
+    .eq("user_id", ctx.user.id)
+    .maybeSingle();
+  if (!member || member.role !== "owner") {
     return NextResponse.json({ error: "only_owner" }, { status: 403 });
   }
 
-  const supabase = createClient();
   const { data, error } = await supabase.rpc("delete_workspace", {
-    ws_id: ctx.workspace.id,
+    ws_id: wsId,
   });
   if (error) {
     return NextResponse.json(

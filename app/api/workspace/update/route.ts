@@ -9,9 +9,6 @@ export async function POST(request: Request) {
   if (!ctx) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (ctx.role !== "owner") {
-    return NextResponse.json({ error: "only_owner" }, { status: 403 });
-  }
 
   let body: any;
   try {
@@ -19,6 +16,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
+  const wsId: string = (body?.workspaceId || ctx.workspace.id).toString();
   const name: string = (body?.name || "").toString().trim();
   const currency: string = (body?.currency || ctx.workspace.default_currency)
     .toString()
@@ -32,8 +30,20 @@ export async function POST(request: Request) {
   }
 
   const supabase = createClient();
+
+  // Verify caller is owner of the target workspace (not just the active one).
+  const { data: member } = await supabase
+    .from("workspace_members")
+    .select("role")
+    .eq("workspace_id", wsId)
+    .eq("user_id", ctx.user.id)
+    .maybeSingle();
+  if (!member || member.role !== "owner") {
+    return NextResponse.json({ error: "only_owner" }, { status: 403 });
+  }
+
   const { data, error } = await supabase.rpc("update_workspace", {
-    ws_id: ctx.workspace.id,
+    ws_id: wsId,
     ws_name: name,
     currency,
   });
