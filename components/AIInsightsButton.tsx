@@ -27,7 +27,7 @@ const LANGS = [
 
 const PROVIDERS: { code: Provider; label: string; sub: string }[] = [
   { code: "gemini", label: "Gemini", sub: "Google · 3.1 Flash Lite" },
-  { code: "deepseek", label: "DeepSeek", sub: "V4 Pro" },
+  { code: "deepseek", label: "DeepSeek", sub: "V4 Flash → Pro" },
 ];
 
 export function AIInsightsButton() {

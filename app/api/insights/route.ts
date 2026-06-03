@@ -89,9 +89,10 @@ async function callGemini(prompt: string) {
   return JSON.parse(result.response.text());
 }
 
-// Model fallback chain — try newest first; fall back if account/region doesn't
-// yet expose the V4 names, so insights still work.
-const DEEPSEEK_MODELS = ["deepseek-v4-pro", "deepseek-v4-flash", "deepseek-chat"];
+// Model fallback chain — V4 Flash is a non-thinking model (fast, direct JSON
+// output), V4 Pro is a reasoning model (slower, may exhaust token budget on
+// internal thinking). Flash is the right tool for AI Insights' bounded prompt.
+const DEEPSEEK_MODELS = ["deepseek-v4-flash", "deepseek-v4-pro", "deepseek-chat"];
 
 async function callDeepSeekModel(model: string, prompt: string) {
   // Hard timeout 45s so Vercel function (60s budget) can return an error
@@ -118,7 +119,7 @@ async function callDeepSeekModel(model: string, prompt: string) {
         ],
         response_format: { type: "json_object" },
         temperature: 0.2,
-        max_tokens: 2000,
+        max_tokens: 4000,
       }),
       signal: controller.signal,
     });
@@ -146,7 +147,15 @@ async function callDeepSeekModel(model: string, prompt: string) {
     throw new Error(String(m).slice(0, 300));
   }
   const content = j?.choices?.[0]?.message?.content;
-  if (!content) throw new Error(`no content. Raw: ${rawBody.slice(0, 300)}`);
+  if (!content) {
+    // V4 Pro and other reasoning models may spend the token budget on
+    // reasoning_content and leave content empty. Treat as failure so the
+    // chain tries the next model.
+    const reason = j?.choices?.[0]?.message?.reasoning_content
+      ? "reasoning model ran out of tokens"
+      : "empty content";
+    throw new Error(`${reason}`);
+  }
   try {
     return JSON.parse(content);
   } catch {
@@ -168,13 +177,16 @@ async function callDeepSeek(prompt: string) {
     } catch (e: any) {
       const msg = String(e?.message || e);
       errors.push(`${model}: ${msg}`);
-      const isModelMissing =
+      const isRetryable =
         /not\s*found/i.test(msg) ||
         /unknown\s*model/i.test(msg) ||
         /does\s*not\s*exist/i.test(msg) ||
         /invalid\s*model/i.test(msg) ||
-        /HTTP\s*40[04]/i.test(msg);
-      if (!isModelMissing) {
+        /HTTP\s*40[04]/i.test(msg) ||
+        /reasoning model/i.test(msg) ||
+        /empty content/i.test(msg) ||
+        /timed out/i.test(msg);
+      if (!isRetryable) {
         // Non-model error (balance, auth, network) — don't waste retries
         throw new Error(`DeepSeek ${model} failed: ${msg}`);
       }
