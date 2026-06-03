@@ -89,10 +89,11 @@ async function callGemini(prompt: string) {
   return JSON.parse(result.response.text());
 }
 
-async function callDeepSeek(prompt: string) {
-  if (!process.env.DEEPSEEK_API_KEY) {
-    throw new Error("DeepSeek API key not configured (DEEPSEEK_API_KEY)");
-  }
+// Model fallback chain — try newest first; fall back if account/region doesn't
+// yet expose the V4 names, so insights still work.
+const DEEPSEEK_MODELS = ["deepseek-v4-pro", "deepseek-v4-flash", "deepseek-chat"];
+
+async function callDeepSeekModel(model: string, prompt: string) {
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
     headers: {
@@ -100,7 +101,7 @@ async function callDeepSeek(prompt: string) {
       Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "deepseek-v4-pro",
+      model,
       messages: [
         {
           role: "system",
@@ -116,40 +117,55 @@ async function callDeepSeek(prompt: string) {
 
   const rawBody = await res.text();
   if (!res.ok) {
-    throw new Error(
-      `DeepSeek HTTP ${res.status}: ${rawBody.slice(0, 300)}`
-    );
+    throw new Error(`HTTP ${res.status}: ${rawBody.slice(0, 300)}`);
   }
-
   let j: any;
   try {
     j = JSON.parse(rawBody);
   } catch {
-    throw new Error(
-      `DeepSeek returned non-JSON envelope: ${rawBody.slice(0, 300)}`
-    );
+    throw new Error(`non-JSON envelope: ${rawBody.slice(0, 300)}`);
   }
-
-  // Upstream API error wrapped in 200 OK (sometimes happens with quota issues)
   if (j?.error) {
     const m = j.error?.message || JSON.stringify(j.error);
-    throw new Error(`DeepSeek error: ${String(m).slice(0, 300)}`);
+    throw new Error(String(m).slice(0, 300));
   }
-
   const content = j?.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error(
-      `DeepSeek returned no content. Raw: ${rawBody.slice(0, 300)}`
-    );
-  }
-
+  if (!content) throw new Error(`no content. Raw: ${rawBody.slice(0, 300)}`);
   try {
     return JSON.parse(content);
   } catch {
     throw new Error(
-      `DeepSeek content was not JSON. Content: ${String(content).slice(0, 300)}`
+      `content not JSON: ${String(content).slice(0, 300)}`
     );
   }
+}
+
+async function callDeepSeek(prompt: string) {
+  if (!process.env.DEEPSEEK_API_KEY) {
+    throw new Error("DeepSeek API key not configured (DEEPSEEK_API_KEY)");
+  }
+  const errors: string[] = [];
+  for (const model of DEEPSEEK_MODELS) {
+    try {
+      const out = await callDeepSeekModel(model, prompt);
+      return { ...out, _model: model };
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      errors.push(`${model}: ${msg}`);
+      const isModelMissing =
+        /not\s*found/i.test(msg) ||
+        /unknown\s*model/i.test(msg) ||
+        /does\s*not\s*exist/i.test(msg) ||
+        /invalid\s*model/i.test(msg) ||
+        /HTTP\s*40[04]/i.test(msg);
+      if (!isModelMissing) {
+        // Non-model error (balance, auth, network) — don't waste retries
+        throw new Error(`DeepSeek ${model} failed: ${msg}`);
+      }
+      // else fall through to next model
+    }
+  }
+  throw new Error(`All DeepSeek models failed:\n${errors.join("\n")}`);
 }
 
 export async function POST(request: Request) {
