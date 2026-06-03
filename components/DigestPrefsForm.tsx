@@ -12,6 +12,8 @@ export function DigestPrefsForm() {
   const [tzMinutes, setTzMinutes] = useState(420);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
   useEffect(() => {
     // Detect user's tz from browser
@@ -42,6 +44,24 @@ export function DigestPrefsForm() {
     if (r.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    }
+  }
+
+  async function sendTest() {
+    setTesting(true);
+    setTestMsg(null);
+    try {
+      const r = await fetch("/api/digest/test", { method: "POST" });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setTestMsg({ kind: "err", text: j?.error || `Send failed (${r.status})` });
+      } else {
+        setTestMsg({ kind: "ok", text: t("Test digest sent — check your Telegram.") });
+      }
+    } catch (e: any) {
+      setTestMsg({ kind: "err", text: e?.message || "Send failed" });
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -100,9 +120,35 @@ export function DigestPrefsForm() {
         </>
       )}
 
-      <button onClick={save} disabled={saving} className="btn-primary">
-        {saving ? "Saving..." : saved ? "✅ Saved" : "Save"}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={save} disabled={saving} className="btn-primary">
+          {saving ? "Saving..." : saved ? "✅ Saved" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={sendTest}
+          disabled={testing}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-medium px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
+        >
+          {testing ? t("Sending...") : `✈ ${t("Send test digest now")}`}
+        </button>
+      </div>
+
+      {testMsg && (
+        <div
+          className={
+            testMsg.kind === "ok"
+              ? "text-xs text-green-600 dark:text-green-400"
+              : "text-xs text-red-600 dark:text-red-400"
+          }
+        >
+          {testMsg.text}
+        </div>
+      )}
+
+      <p className="text-xs text-slate-400 dark:text-slate-500">
+        {t("Tip: scheduled cron runs roughly every hour and may be delayed by up to an hour. Use \"Send test digest now\" to verify your Telegram connection.")}
+      </p>
     </div>
   );
 }
