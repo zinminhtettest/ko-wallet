@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Sparkles, X, Loader2 } from "lucide-react";
 
 type Card = {
@@ -37,6 +38,13 @@ export function AIInsightsButton() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Mounted flag lets us safely use document.body for the portal target
+  // (document doesn't exist during SSR).
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Remember last-used provider across sessions
   useEffect(() => {
@@ -89,19 +97,10 @@ export function AIInsightsButton() {
     setErr(null);
   }
 
-  return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition grid place-items-center"
-        title="AI Insights"
-        aria-label="AI Insights"
-      >
-        <Sparkles className="w-6 h-6" />
-      </button>
-
-      {open && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm grid place-items-center p-4 overflow-y-auto">
+  const modalNode = open && (
+    <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md grid place-items-center p-4 overflow-y-auto"
+      style={{ paddingTop: "max(1rem, env(safe-area-inset-top))", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+    >
           <div className="card max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto relative my-8">
             <button
               onClick={close}
@@ -243,7 +242,19 @@ export function AIInsightsButton() {
             )}
           </div>
         </div>
-      )}
+  );
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition grid place-items-center"
+        title="AI Insights"
+        aria-label="AI Insights"
+      >
+        <Sparkles className="w-6 h-6" />
+      </button>
+      {mounted && modalNode ? createPortal(modalNode, document.body) : null}
     </>
   );
 }
