@@ -16,8 +16,8 @@ export default async function NewTransferPage() {
   if (list.length < 2) {
     return (
       <div className="max-w-xl">
-        <Link href="/dashboard" className="inline-flex items-center text-sm text-slate-500 mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" /> {t("Back")}
+        <Link href="/settings" className="inline-flex items-center text-sm text-slate-500 mb-4">
+          <ArrowLeft className="w-4 h-4 mr-1" /> {t("Settings")}
         </Link>
         <h1 className="text-2xl font-bold mb-4">{t("Transfer Between Wallets")}</h1>
         <div className="card p-6 text-slate-600">

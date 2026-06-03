@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { ClientsManager } from "@/components/ClientsManager";
 import { getServerT } from "@/lib/user-lang";
@@ -9,7 +10,10 @@ export default async function ClientsPage() {
   return (
     <div className="space-y-5 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">{t("Clients")}</h1>
+        <Link href="/settings" className="text-sm text-slate-500">
+          ← {t("Settings")}
+        </Link>
+        <h1 className="text-2xl font-bold mt-1">{t("Clients")}</h1>
         <p className="text-sm text-slate-500 mt-1">
           {t("Track clients and outstanding invoices for your business wallets (mini-CRM).")}
         </p>

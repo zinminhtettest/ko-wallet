@@ -174,7 +174,7 @@ export default async function SettingsPage() {
           <Mail className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">{t("Krungthai Bank Auto-Import")}</div>
+          <div className="font-semibold">{t("Thai Banks Auto-Import")}</div>
           <div className="text-sm text-slate-500 dark:text-slate-400">{t("Connect Gmail to auto-import bank transactions")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>

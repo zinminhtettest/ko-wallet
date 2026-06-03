@@ -57,6 +57,7 @@ const my: Dict = {
   "Investments": "ရင်းနှီးမြှုပ်နှံမှု",
   "Clients & Invoices": "Client နှင့် ပြေစာများ",
   "Krungthai Bank Auto-Import": "Krungthai Bank အလိုအလျောက် သွင်းခြင်း",
+  "Thai Banks Auto-Import": "ထိုင်းဘဏ်များ အလိုအလျောက် သွင်းခြင်း",
   "AI Insights": "AI သုံးသပ်ချက်များ",
 
   // Date filters
@@ -416,6 +417,7 @@ const th: Dict = {
   "Investments": "การลงทุน",
   "Clients & Invoices": "ลูกค้าและใบแจ้งหนี้",
   "Krungthai Bank Auto-Import": "นำเข้าอัตโนมัติ Krungthai",
+  "Thai Banks Auto-Import": "นำเข้าอัตโนมัติธนาคารไทย",
   "AI Insights": "ข้อมูลเชิงลึก AI",
 
   // Date filters
@@ -775,6 +777,7 @@ const both: Dict = {
   "Investments": "Investments",
   "Clients & Invoices": "Clients & Invoices",
   "Krungthai Bank Auto-Import": "Krungthai Bank Auto-Import",
+  "Thai Banks Auto-Import": "Thai Banks Auto-Import",
   "AI Insights": "AI Insights",
 
   // Date filters

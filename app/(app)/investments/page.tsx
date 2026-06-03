@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { InvestmentsManager } from "@/components/InvestmentsManager";
 import { getServerT } from "@/lib/user-lang";
@@ -9,7 +10,10 @@ export default async function InvestmentsPage() {
   return (
     <div className="space-y-5 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">{t("Investments")}</h1>
+        <Link href="/settings" className="text-sm text-slate-500">
+          ← {t("Settings")}
+        </Link>
+        <h1 className="text-2xl font-bold mt-1">{t("Investments")}</h1>
         <p className="text-sm text-slate-500 mt-1">
           {t("Track stocks, crypto, gold positions with gain/loss")}
         </p>
