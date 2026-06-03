@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientDate } from "@/components/ClientDate";
+import { useT } from "@/lib/i18n-client";
 
 export type NotificationItem = {
   id: string;
@@ -22,6 +23,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
   const router = useRouter();
   const [items, setItems] = useState<NotificationItem[]>(initial);
   const [busy, setBusy] = useState(false);
+  const t = useT();
 
   const unread = items.filter((n) => !n.read_at).length;
 
@@ -56,9 +58,9 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
     return (
       <div className="card p-8 text-center">
         <Bell className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-        <div className="font-semibold">No notifications yet</div>
+        <div className="font-semibold">{t("No notifications yet")}</div>
         <div className="text-sm text-slate-500">
-          Invites, joins, system updates တွေ ဒီနေရာမှာ ပေါ်ပါမယ်။
+          {t("Invites, joins, and system updates appear here.")}
         </div>
       </div>
     );
@@ -74,7 +76,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
             disabled={busy}
             className="btn-secondary text-sm"
           >
-            <Check className="w-4 h-4" /> Mark all as read
+            <Check className="w-4 h-4" /> {t("Mark all as read")}
           </button>
         </div>
       )}

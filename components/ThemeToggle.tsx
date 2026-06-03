@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 
 type Theme = "light" | "dark" | "system";
 
@@ -16,6 +17,7 @@ function applyTheme(theme: Theme) {
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const [theme, setTheme] = useState<Theme>("system");
   const [open, setOpen] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     const stored = (localStorage.getItem("ko_theme") as Theme) || "system";
@@ -44,8 +46,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-        title={`Theme: ${theme}`}
-        aria-label="Toggle theme"
+        title={`${t("Theme")}: ${t(theme.charAt(0).toUpperCase() + theme.slice(1))}`}
+        aria-label={t("Toggle theme")}
       >
         <Icon className="w-5 h-5" />
       </button>
@@ -67,7 +69,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
                     : "hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
               >
-                <opt.Icon className="w-4 h-4" /> {opt.label}
+                <opt.Icon className="w-4 h-4" /> {t(opt.label)}
               </button>
             ))}
           </div>

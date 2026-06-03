@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { WalletManager, type WalletRow } from "@/components/WalletManager";
+import { getServerT } from "@/lib/user-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ type WsRpc = {
 export default async function WalletSettingsPage() {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
+  const t = await getServerT();
 
   const supabase = createClient();
   const { data } = await supabase.rpc("list_my_workspaces");
@@ -29,11 +31,11 @@ export default async function WalletSettingsPage() {
     <div className="space-y-5 max-w-4xl">
       <div>
         <Link href="/settings" className="text-sm text-slate-500">
-          ← Settings
+          ← {t("Settings")}
         </Link>
-        <h1 className="text-2xl font-bold mt-1">Wallet Settings</h1>
+        <h1 className="text-2xl font-bold mt-1">{t("Wallet Settings")}</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Manage every wallet you own or belong to.
+          {t("Manage every wallet you own or belong to.")}
         </p>
       </div>
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2, Check, Lock, Wallet as WalletIcon, X, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 export type WalletRow = {
   id: string;
@@ -23,6 +24,7 @@ export function WalletManager({
 }) {
   const router = useRouter();
   const dialog = useDialog();
+  const t = useT();
   const [wallets, setWallets] = useState<WalletRow[]>(initialWallets);
   const [activeWalletId, setActiveWalletId] = useState(activeId);
   const [selectedId, setSelectedId] = useState<string>(activeId);
@@ -51,11 +53,11 @@ export function WalletManager({
         sessionStorage.removeItem("ko_ws_cache_v1");
       } catch {}
       setActiveWalletId(wsId);
-      dialog.notify({ kind: "success", message: "Default wallet updated" });
+      dialog.notify({ kind: "success", message: t("Default wallet updated") });
       router.refresh();
     } else {
       const j = await r.json().catch(() => ({}));
-      dialog.notify({ kind: "error", message: j?.error || "Failed to switch" });
+      dialog.notify({ kind: "error", message: j?.error || t("Failed to switch") });
     }
   }
 
@@ -70,7 +72,7 @@ export function WalletManager({
           )}
         >
           <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">
-            My Wallets ({wallets.length})
+            {t("My Wallets")} ({wallets.length})
           </div>
           {wallets.map((w) => {
             const isActive = w.id === activeWalletId;
@@ -132,7 +134,7 @@ export function WalletManager({
                           : "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
                       )}
                     >
-                      DEFAULT
+                      {t("DEFAULT")}
                     </span>
                   )}
                 </div>
@@ -145,7 +147,7 @@ export function WalletManager({
             onClick={() => setShowCreate(true)}
             className="w-full rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 px-3 py-2.5 text-brand-600 dark:text-brand-400 text-sm font-medium flex items-center justify-center gap-1.5 transition"
           >
-            <Plus className="w-4 h-4" /> New wallet
+            <Plus className="w-4 h-4" /> {t("New wallet")}
           </button>
         </aside>
 
@@ -159,7 +161,7 @@ export function WalletManager({
               onClick={() => setShowMobileDetail(false)}
               className="md:hidden mb-3 inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to wallets
+              <ArrowLeft className="w-4 h-4" /> {t("Back to wallets")}
             </button>
             <WalletDetail
               key={selected.id}
@@ -227,6 +229,7 @@ function WalletDetail({
   onDeleted: () => void;
 }) {
   const dialog = useDialog();
+  const t = useT();
   const [name, setName] = useState(wallet.name);
   const [currency, setCurrency] = useState(wallet.currency);
   const [saving, setSaving] = useState(false);
@@ -248,9 +251,9 @@ function WalletDetail({
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) {
-        dialog.notify({ kind: "error", message: j?.error || "Save failed" });
+        dialog.notify({ kind: "error", message: j?.error || t("Save failed") });
       } else {
-        dialog.notify({ kind: "success", message: "Wallet updated" });
+        dialog.notify({ kind: "success", message: t("Wallet updated") });
         onUpdated(name.trim(), currency);
       }
     } finally {
@@ -260,10 +263,11 @@ function WalletDetail({
 
   async function del() {
     const ok = await dialog.confirm({
-      title: `Delete "${wallet.name}"?`,
-      message:
-        "Every transaction, category, budget, goal, member, and invite in this wallet will be permanently removed. This cannot be undone.",
-      confirmLabel: "Delete forever",
+      title: `${t("Delete")} "${wallet.name}"?`,
+      message: t(
+        "Every transaction, category, budget, goal, member, and invite in this wallet will be permanently removed. This cannot be undone."
+      ),
+      confirmLabel: t("Delete forever"),
       destructive: true,
     });
     if (!ok) return;
@@ -278,15 +282,15 @@ function WalletDetail({
       if (!r.ok) {
         dialog.notify({
           kind: "error",
-          title: "Could not delete",
-          message: j?.error || "Delete failed",
+          title: t("Could not delete"),
+          message: j?.error || t("Delete failed"),
         });
         setDeleting(false);
         return;
       }
       onDeleted();
     } catch (e: any) {
-      dialog.notify({ kind: "error", message: e?.message || "Delete failed" });
+      dialog.notify({ kind: "error", message: e?.message || t("Delete failed") });
       setDeleting(false);
     }
   }
@@ -297,13 +301,13 @@ function WalletDetail({
         <h2 className="text-lg font-bold truncate">{wallet.name}</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           {wallet.currency} · {wallet.role}
-          {isActive && " · active (your default)"}
+          {isActive && ` · ${t("active (your default)")}`}
         </p>
       </div>
 
       <form onSubmit={save} className="card p-5 space-y-4">
         <div>
-          <label className="label">Wallet name</label>
+          <label className="label">{t("Wallet name")}</label>
           <input
             className="input"
             value={name}
@@ -313,12 +317,12 @@ function WalletDetail({
           />
           {!isOwner && (
             <div className="text-xs text-slate-500 mt-1">
-              Only the wallet owner can rename this wallet.
+              {t("Only the wallet owner can rename this wallet.")}
             </div>
           )}
         </div>
         <div>
-          <label className="label">Default currency</label>
+          <label className="label">{t("Default currency")}</label>
           <select
             className="input"
             value={currency}
@@ -333,27 +337,27 @@ function WalletDetail({
           </select>
           {!isOwner && (
             <div className="text-xs text-slate-500 mt-1">
-              Only the wallet owner can change the default currency.
+              {t("Only the wallet owner can change the default currency.")}
             </div>
           )}
         </div>
         {isOwner && (
           <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? "Saving..." : "Save changes"}
+            {saving ? t("Saving...") : t("Save changes")}
           </button>
         )}
       </form>
 
       <div className="card p-5 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="font-semibold">Default wallet</div>
+          <div className="font-semibold">{t("Default wallet")}</div>
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            The wallet that opens on login. Switch any time.
+            {t("The wallet that opens on login. Switch any time.")}
           </div>
         </div>
         {isActive ? (
           <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 flex-shrink-0">
-            <Check className="w-3 h-3" /> Default
+            <Check className="w-3 h-3" /> {t("Default")}
           </span>
         ) : (
           <button
@@ -361,7 +365,7 @@ function WalletDetail({
             onClick={onSetDefault}
             className="text-sm font-medium px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex-shrink-0"
           >
-            Set as default
+            {t("Set as default")}
           </button>
         )}
       </div>
@@ -369,12 +373,10 @@ function WalletDetail({
       {isOwner && (
         <div className="card p-5 border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/20">
           <div className="font-semibold text-red-700 dark:text-red-300">
-            Danger zone
+            {t("Danger zone")}
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 mb-3">
-            Permanently delete this wallet and all its data. If this is your
-            last wallet, a fresh empty one is created automatically on your next
-            visit.
+            {t("Permanently delete this wallet and all its data. If this is your last wallet, a fresh empty one is created automatically on your next visit.")}
           </p>
           <button
             type="button"
@@ -383,7 +385,7 @@ function WalletDetail({
             className="inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2.5 disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
-            {deleting ? "Deleting..." : `Delete "${wallet.name}"`}
+            {deleting ? t("Deleting...") : `${t("Delete")} "${wallet.name}"`}
           </button>
         </div>
       )}
@@ -399,6 +401,7 @@ function CreateWalletModal({
   onCreated: (w: WalletRow) => void;
 }) {
   const dialog = useDialog();
+  const t = useT();
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("THB");
   const [busy, setBusy] = useState(false);
@@ -423,7 +426,7 @@ function CreateWalletModal({
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) {
-        dialog.notify({ kind: "error", message: j?.error || "Create failed" });
+        dialog.notify({ kind: "error", message: j?.error || t("Create failed") });
         setBusy(false);
         return;
       }
@@ -431,7 +434,7 @@ function CreateWalletModal({
       if (!wsId) {
         dialog.notify({
           kind: "error",
-          message: "Created but no id returned. Refresh the page.",
+          message: t("Created but no id returned. Refresh the page."),
         });
         setBusy(false);
         return;
@@ -443,7 +446,7 @@ function CreateWalletModal({
         role: "owner",
       });
     } catch (e: any) {
-      dialog.notify({ kind: "error", message: e?.message || "Create failed" });
+      dialog.notify({ kind: "error", message: e?.message || t("Create failed") });
       setBusy(false);
     }
   }
@@ -459,13 +462,13 @@ function CreateWalletModal({
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-slate-900 dark:text-white">
-            Create new wallet
+            {t("Create new wallet")}
           </h3>
           <button
             type="button"
             onClick={onClose}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-label="Close"
+            aria-label={t("Close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -473,18 +476,18 @@ function CreateWalletModal({
 
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className="label">Wallet name</label>
+            <label className="label">{t("Wallet name")}</label>
             <input
               autoFocus
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Business"
+              placeholder={t("e.g. Business")}
               required
             />
           </div>
           <div>
-            <label className="label">Default currency</label>
+            <label className="label">{t("Default currency")}</label>
             <select
               className="input"
               value={currency}
@@ -504,14 +507,14 @@ function CreateWalletModal({
               disabled={busy || !name.trim()}
               className="btn-primary flex-1"
             >
-              {busy ? "Creating..." : "Create wallet"}
+              {busy ? t("Creating...") : t("Create wallet")}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </form>

@@ -6,10 +6,12 @@ import { RemoveMemberButton } from "@/components/RemoveMemberButton";
 import { CancelInviteButton } from "@/components/CancelInviteButton";
 import { Copy } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
+import { getServerT } from "@/lib/user-lang";
 
 export default async function WorkspaceSettingsPage() {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
+  const t = await getServerT();
 
   const srv = createServiceClient();
   const { data: members } = await srv
@@ -39,21 +41,21 @@ export default async function WorkspaceSettingsPage() {
   return (
     <div className="space-y-5 max-w-2xl">
       <div>
-        <Link href="/settings" className="text-sm text-slate-500">← Settings</Link>
-        <h1 className="text-2xl font-bold mt-1">Family Workspace</h1>
+        <Link href="/settings" className="text-sm text-slate-500">← {t("Settings")}</Link>
+        <h1 className="text-2xl font-bold mt-1">{t("Family Workspace")}</h1>
         <p className="text-sm text-slate-500 mt-1">
-          အကောင့်များ မျှသုံး — အားလုံး transaction တွေ မြင်နိုင်ပြီး edit လုပ်နိုင်တယ်။
+          {t("Shared accounts — everyone can view and edit all transactions.")}
         </p>
       </div>
 
       <div className="card p-5">
-        <h3 className="font-semibold mb-3">Members ({members?.length ?? 0})</h3>
+        <h3 className="font-semibold mb-3">{t("Members")} ({members?.length ?? 0})</h3>
         <ul className="divide-y divide-slate-100">
           {(members ?? []).map((m: any) => (
             <li key={m.id} className="py-3 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="font-medium truncate">{userEmails[m.user_id] || m.user_id}</div>
-                <div className="text-xs text-slate-500">Joined <ClientDate value={m.joined_at} /></div>
+                <div className="text-xs text-slate-500">{t("Joined")} <ClientDate value={m.joined_at} /></div>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${m.role === "owner" ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-700"}`}>
                 {m.role}
@@ -68,14 +70,14 @@ export default async function WorkspaceSettingsPage() {
 
       {ctx.role === "owner" && (
         <div className="card p-5">
-          <h3 className="font-semibold mb-3">Invite a family member</h3>
+          <h3 className="font-semibold mb-3">{t("Invite a family member")}</h3>
           <InviteMemberForm workspaceId={ctx.workspace.id} />
         </div>
       )}
 
       {invites && invites.length > 0 && (
         <div className="card p-5">
-          <h3 className="font-semibold mb-3">Pending Invites</h3>
+          <h3 className="font-semibold mb-3">{t("Pending Invites")}</h3>
           <ul className="divide-y divide-slate-100 dark:divide-slate-800">
             {invites.map((inv: any) => {
               const url = `${appUrl}/invite/${inv.token}`;
@@ -107,7 +109,7 @@ function CopyLinkButton({ url }: { url: string }) {
       // we make this a no-op link; users can copy the URL above directly.
       className="text-xs text-brand-600 hover:underline inline-flex items-center gap-1 mt-1"
     >
-      <Copy className="w-3 h-3" /> Copy link manually
+      <Copy className="w-3 h-3" /> Copy link
     </Link>
   );
 }

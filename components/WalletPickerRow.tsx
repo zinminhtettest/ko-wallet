@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
 import { Wallet, Lock, Check, ArrowUpRight, ArrowDownRight, LayoutGrid, X, Plus, PlusCircle } from "lucide-react";
 import { formatMoney, cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-client";
 
 export type WalletCardData = {
   id: string;
@@ -27,6 +28,7 @@ export function WalletPickerRow({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const currentKind = searchParams?.get("kind");
+  const t = useT();
 
   async function switchTo(id: string) {
     if (id === activeId || switching) return;
@@ -86,7 +88,7 @@ export function WalletPickerRow({
             {active.name}
           </div>
           <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-            ACTIVE
+            {t("ACTIVE")}
           </span>
         </div>
         <div className="text-xs text-blue-100 mb-3">
@@ -113,7 +115,7 @@ export function WalletPickerRow({
               ) : (
                 <ArrowUpRight className="w-3 h-3" />
               )}
-              Income
+              {t("Income")}
             </div>
             <div className="font-bold text-white text-base">
               {formatMoney(active.income, active.currency)}
@@ -136,7 +138,7 @@ export function WalletPickerRow({
               ) : (
                 <ArrowDownRight className="w-3 h-3" />
               )}
-              Expense
+              {t("Expense")}
             </div>
             <div className="font-bold text-white text-base">
               {formatMoney(active.expense, active.currency)}
@@ -149,7 +151,7 @@ export function WalletPickerRow({
           href="/transactions/new"
           className="md:hidden mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 border-[1.5px] border-white/40 text-white font-semibold py-2.5 text-sm transition"
         >
-          <PlusCircle className="w-4 h-4" /> Add Transaction
+          <PlusCircle className="w-4 h-4" /> {t("Add Transaction")}
         </Link>
       </div>
 
@@ -158,9 +160,9 @@ export function WalletPickerRow({
         {others.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-4 text-center text-xs text-slate-500 dark:text-slate-400 md:h-full grid place-items-center">
             <div>
-              <div className="mb-1">No other wallets</div>
+              <div className="mb-1">{t("No other wallets")}</div>
               <Link href="/settings/wallets" className="text-brand-600 underline">
-                Create one
+                {t("Create one")}
               </Link>
             </div>
           </div>
@@ -194,7 +196,7 @@ export function WalletPickerRow({
                   className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition p-3 text-brand-600 dark:text-brand-400 text-sm font-medium flex items-center justify-center gap-2"
                 >
                   <LayoutGrid className="w-4 h-4" />
-                  +{others.length - 2} more
+                  +{others.length - 2} {t("more")}
                 </button>
               )}
             </div>
@@ -214,13 +216,13 @@ export function WalletPickerRow({
           >
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
               <h3 className="font-semibold text-slate-900 dark:text-white">
-                Switch Wallet
+                {t("Switch Wallet")}
               </h3>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                aria-label="Close"
+                aria-label={t("Close")}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -273,7 +275,7 @@ export function WalletPickerRow({
                         </div>
                         {isActive && (
                           <div className="text-[10px] text-brand-600 dark:text-brand-300 font-semibold flex items-center justify-end gap-0.5">
-                            <Check className="w-3 h-3" /> Active
+                            <Check className="w-3 h-3" /> {t("Active")}
                           </div>
                         )}
                       </div>
@@ -288,7 +290,7 @@ export function WalletPickerRow({
               onClick={() => setModalOpen(false)}
               className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white py-2.5 text-sm font-semibold flex-shrink-0"
             >
-              <Plus className="w-4 h-4" /> New Wallet
+              <Plus className="w-4 h-4" /> {t("New Wallet")}
             </Link>
           </div>
         </div>

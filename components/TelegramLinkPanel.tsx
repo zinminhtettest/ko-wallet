@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MessageCircle, Copy, Check, AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 type State = {
   linked: boolean;
@@ -19,6 +20,7 @@ type State = {
 
 export function TelegramLinkPanel() {
   const dialog = useDialog();
+  const t = useT();
   const [state, setState] = useState<State | null>(null);
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -51,13 +53,13 @@ export function TelegramLinkPanel() {
   }
 
   async function unlink() {
-    if (!(await dialog.confirm({ message: "Disconnect Telegram?", destructive: true }))) return;
+    if (!(await dialog.confirm({ message: t("Disconnect Telegram?"), destructive: true }))) return;
     await fetch("/api/telegram/link", { method: "DELETE" });
     setCode(null);
     await load();
   }
 
-  if (!state) return <div className="card p-6 text-slate-500">Loading…</div>;
+  if (!state) return <div className="card p-6 text-slate-500">{t("Loading…")}</div>;
 
   const botName = state.bot_username || "your_bot";
 
@@ -70,20 +72,20 @@ export function TelegramLinkPanel() {
             <Check className="w-6 h-6" />
           </div>
           <div>
-            <div className="font-semibold">Connected to this wallet</div>
+            <div className="font-semibold">{t("Connected to this wallet")}</div>
             <div className="text-sm text-slate-500">
               {state.username ? `@${state.username}` : `chat ${state.chat_id}`}
-              {state.linked_at ? <> · since <ClientDate value={state.linked_at} /></> : ""}
+              {state.linked_at ? <> · {t("since")} <ClientDate value={state.linked_at} /></> : ""}
             </div>
           </div>
         </div>
         <div className="text-sm text-slate-600">
-          ဒီ wallet (<b>{state.current_workspace_name}</b>) ထဲ Telegram က transaction တွေ ဝင်ပါမယ်။<br />
-          Try: <code className="bg-slate-100 px-1.5 rounded">/balance</code> ·{" "}
+          {t("Telegram transactions will land in this wallet")} (<b>{state.current_workspace_name}</b>).<br />
+          {t("Try:")} <code className="bg-slate-100 px-1.5 rounded">/balance</code> ·{" "}
           <code className="bg-slate-100 px-1.5 rounded">250 baht coffee</code>
         </div>
         <button onClick={unlink} className="btn-danger text-sm">
-          Disconnect
+          {t("Disconnect")}
         </button>
       </div>
     );
@@ -100,7 +102,8 @@ export function TelegramLinkPanel() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold">
-                Telegram က <span className="text-amber-700">{state.active_workspace_name || "another wallet"}</span> ထဲ ဝင်နေတယ်
+                {t("Telegram is currently sending to")}{" "}
+                <span className="text-amber-700">{state.active_workspace_name || t("another wallet")}</span>
               </div>
               <div className="text-sm text-slate-500">
                 {state.username ? `@${state.username}` : `chat ${state.chat_id}`}
@@ -108,9 +111,9 @@ export function TelegramLinkPanel() {
             </div>
           </div>
           <div className="text-sm text-slate-600">
-            Telegram bot က transaction တွေကို တစ်ခါတည်း တစ်ခုပဲ wallet ထဲ ပို့နိုင်တယ်။
+            {t("Telegram bot can only send transactions to one wallet at a time.")}
             <br />
-            ဒီ wallet (<b>{state.current_workspace_name}</b>) ထဲ ပြောင်းပို့ချင်ရင် —
+            {t("Switch to this wallet")} (<b>{state.current_workspace_name}</b>) —
           </div>
           <button
             onClick={switchToCurrentWallet}
@@ -118,15 +121,15 @@ export function TelegramLinkPanel() {
             className="btn-primary text-sm py-2.5 inline-flex items-center gap-2"
           >
             <ArrowRightLeft className="w-4 h-4" />
-            {busy ? "Switching..." : `Switch Telegram to "${state.current_workspace_name}"`}
+            {busy ? t("Switching...") : `${t("Switch Telegram to")} "${state.current_workspace_name}"`}
           </button>
         </div>
 
         <div className="card p-5 text-sm text-slate-600">
-          💡 Telegram ထဲမှာ command နဲ့လည်း ပြောင်းနိုင်ပါတယ်:
+          💡 {t("You can also switch from inside Telegram:")}
           <div className="mt-2 space-y-1">
-            <div><code className="bg-slate-100 px-1.5 rounded">/use</code> — list all wallets</div>
-            <div><code className="bg-slate-100 px-1.5 rounded">/use {state.current_workspace_name}</code> — switch to this wallet</div>
+            <div><code className="bg-slate-100 px-1.5 rounded">/use</code> — {t("list all wallets")}</div>
+            <div><code className="bg-slate-100 px-1.5 rounded">/use {state.current_workspace_name}</code> — {t("switch to this wallet")}</div>
           </div>
         </div>
       </div>
@@ -141,16 +144,16 @@ export function TelegramLinkPanel() {
           <MessageCircle className="w-6 h-6" />
         </div>
         <div>
-          <div className="font-semibold">Connect Telegram</div>
+          <div className="font-semibold">{t("Connect Telegram")}</div>
           <div className="text-sm text-slate-500">
-            ဒီ <b>{state.current_workspace_name}</b> wallet ထဲ Telegram bot က transaction တွေ ပို့ပါမယ်
+            {t("Telegram bot will send transactions to this wallet")}: <b>{state.current_workspace_name}</b>
           </div>
         </div>
       </div>
 
       <ol className="text-sm text-slate-700 space-y-1 list-decimal list-inside">
         <li>
-          Open Telegram and start chat with{" "}
+          {t("Open Telegram and start chat with")}{" "}
           <a
             className="text-brand-600 underline"
             target="_blank"
@@ -160,20 +163,20 @@ export function TelegramLinkPanel() {
             @{botName}
           </a>
         </li>
-        <li>Tap "Generate code" below</li>
+        <li>{t("Tap \"Generate code\" below")}</li>
         <li>
-          In the bot, send: <code className="bg-slate-100 px-1.5 rounded">/link CODE</code>
+          {t("In the bot, send:")} <code className="bg-slate-100 px-1.5 rounded">/link CODE</code>
         </li>
       </ol>
 
       <button onClick={generate} disabled={busy} className="btn-primary py-2.5">
-        {busy ? "Generating…" : code ? "Generate new code" : "Generate code"}
+        {busy ? t("Generating…") : code ? t("Generate new code") : t("Generate code")}
       </button>
 
       {code && (
         <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs text-slate-600 mb-1">Your code (valid 15 min):</div>
+            <div className="text-xs text-slate-600 mb-1">{t("Your code (valid 15 min):")}</div>
             <div className="font-mono text-2xl tracking-widest text-brand-700">{code}</div>
           </div>
           <button
@@ -183,7 +186,7 @@ export function TelegramLinkPanel() {
               setTimeout(() => setCopied(false), 1500);
             }}
             className="p-2 rounded-lg bg-white border border-brand-200"
-            title="Copy /link command"
+            title={t("Copy /link command")}
           >
             {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
           </button>

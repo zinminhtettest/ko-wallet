@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 
 export function TransactionFilters() {
   const router = useRouter();
   const params = useSearchParams();
+  const t = useT();
   const [q, setQ] = useState(params.get("q") || "");
   const [min, setMin] = useState(params.get("min") || "");
   const [max, setMax] = useState(params.get("max") || "");
@@ -46,7 +48,7 @@ export function TransactionFilters() {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
-            placeholder="Search merchant / note..."
+            placeholder={t("Search merchant / note...")}
             className="input pl-9"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -57,14 +59,14 @@ export function TransactionFilters() {
       <div className="grid grid-cols-2 gap-2">
         <input
           type="number"
-          placeholder="Min amount"
+          placeholder={t("Min amount")}
           className="input"
           value={min}
           onChange={(e) => setMin(e.target.value)}
         />
         <input
           type="number"
-          placeholder="Max amount"
+          placeholder={t("Max amount")}
           className="input"
           value={max}
           onChange={(e) => setMax(e.target.value)}
@@ -77,15 +79,15 @@ export function TransactionFilters() {
           onChange={(e) => setTax(e.target.checked)}
           className="rounded"
         />
-        Tax-deductible only
+        {t("Tax-deductible only")}
       </label>
       <div className="flex gap-2">
         <button onClick={apply} className="btn-primary text-sm flex-1 py-2">
-          Apply filters
+          {t("Apply filters")}
         </button>
         {hasFilters && (
           <button onClick={clear} className="btn-secondary text-sm py-2">
-            <X className="w-4 h-4" /> Clear
+            <X className="w-4 h-4" /> {t("Clear")}
           </button>
         )}
       </div>

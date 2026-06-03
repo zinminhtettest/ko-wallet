@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
+import { getUserLang } from "@/lib/user-lang";
+import { LangProvider } from "@/lib/i18n-client";
 
 export default async function AppLayout({
   children,
@@ -19,6 +21,7 @@ export default async function AppLayout({
 
   // 2) Try to get workspace.
   const ctx = await getActiveWorkspace();
+  const lang = await getUserLang();
 
   // 3) If still no workspace, show debug page instead of redirecting
   //    (avoids infinite redirect loop). Click "Try again" to retry.
@@ -46,12 +49,14 @@ export default async function AppLayout({
   }
 
   return (
-    <AppShell
-      workspaceName={ctx.workspace.name}
-      userEmail={ctx.user.email ?? ""}
-      activeWorkspaceId={ctx.workspace.id}
-    >
-      {children}
-    </AppShell>
+    <LangProvider lang={lang}>
+      <AppShell
+        workspaceName={ctx.workspace.name}
+        userEmail={ctx.user.email ?? ""}
+        activeWorkspaceId={ctx.workspace.id}
+      >
+        {children}
+      </AppShell>
+    </LangProvider>
   );
 }

@@ -7,13 +7,14 @@ import { cn } from "@/lib/utils";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SidebarUtilityPill } from "@/components/SidebarUtilityPill";
+import { useT } from "@/lib/i18n-client";
 
-const nav = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/transactions", label: "Transactions", icon: ListChecks },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+const NAV_ITEMS = [
+  { href: "/dashboard", key: "Dashboard", icon: Home },
+  { href: "/transactions", key: "Transactions", icon: ListChecks },
+  { href: "/reports", key: "Reports", icon: BarChart3 },
+  { href: "/settings", key: "Settings", icon: Settings },
+] as const;
 
 function NotificationBell({ className }: { className?: string }) {
   const [unread, setUnread] = useState(0);
@@ -69,6 +70,7 @@ export function AppShell({
   activeWorkspaceId: string;
 }) {
   const pathname = usePathname();
+  const t = useT();
   // workspaceName kept for backwards compatibility but the switcher renders its own label.
   void workspaceName;
 
@@ -87,7 +89,7 @@ export function AppShell({
         <div className="border-t border-slate-200 dark:border-slate-800 my-3" />
 
         <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
-          {nav.map((n) => {
+          {NAV_ITEMS.map((n) => {
             const active = pathname === n.href || pathname?.startsWith(n.href + "/");
             const Icon = n.icon;
             return (
@@ -102,7 +104,7 @@ export function AppShell({
                 )}
               >
                 <Icon className="w-4 h-4" />
-                {n.label}
+                {t(n.key)}
               </Link>
             );
           })}
@@ -141,7 +143,7 @@ export function AppShell({
           !pathname.startsWith("/transactions/split") && (
             <Link
               href="/transactions/new"
-              aria-label="Add transaction"
+              aria-label={t("Add Transaction")}
               className="md:hidden fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full text-white shadow-lg active:scale-95 transition grid place-items-center"
               style={{
                 background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
@@ -157,7 +159,7 @@ export function AppShell({
           className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-[28px] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)] pb-safe"
         >
           <div className="grid grid-cols-4">
-            {nav.map((n) => {
+            {NAV_ITEMS.map((n) => {
               const active = pathname === n.href || pathname?.startsWith(n.href + "/");
               const Icon = n.icon;
               return (
@@ -170,7 +172,7 @@ export function AppShell({
                   )}
                 >
                   <Icon className="w-5 h-5" />
-                  {n.label}
+                  {t(n.key)}
                 </Link>
               );
             })}

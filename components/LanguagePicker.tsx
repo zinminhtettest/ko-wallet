@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { ALL_LANGS, type Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-client";
 
 export function LanguagePicker() {
+  const t = useT();
   const [lang, setLang] = useState<Lang>("en");
   const [saving, setSaving] = useState<Lang | null>(null);
   const [saved, setSaved] = useState(false);
@@ -34,7 +36,7 @@ export function LanguagePicker() {
   return (
     <div>
       <p className="text-sm text-slate-500 mb-3">
-        Pick the UI language for menus, settings, and dashboard headers.
+        {t("Pick the UI language for menus, settings, and dashboard headers.")}
       </p>
       <div className="space-y-2">
         {ALL_LANGS.map((l) => {
@@ -74,7 +76,7 @@ export function LanguagePicker() {
       </div>
       {saved && (
         <div className="text-xs text-green-600 dark:text-green-400 mt-3">
-          ✅ Reloading…
+          ✅ {t("Reloading…")}
         </div>
       )}
     </div>

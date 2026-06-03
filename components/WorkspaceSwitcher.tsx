@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronDown, Check, Plus, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-client";
 
 type WorkspaceRow = {
   workspace_id: string;
@@ -15,6 +16,7 @@ type WorkspaceRow = {
 
 export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
   const supabase = createClient();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
   }, [open]);
 
   const active = workspaces.find((w) => w.workspace_id === activeId);
-  const activeName = active?.workspace_name || "My Wallet";
+  const activeName = active?.workspace_name || t("My Wallet");
 
   async function switchTo(id: string) {
     if (id === activeId) {
@@ -110,7 +112,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
     e.preventDefault();
     setErr(null);
     if (!newName.trim()) {
-      setErr("Name မထည့်ရသေးပါ");
+      setErr(t("Name is required"));
       return;
     }
     setBusy(true);
@@ -150,7 +152,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
       {open && (
         <div className="absolute left-0 right-0 top-full mt-1 z-50 card p-1 shadow-lg">
           {loading ? (
-            <div className="px-3 py-2 text-sm text-slate-500">Loading...</div>
+            <div className="px-3 py-2 text-sm text-slate-500">{t("Loading…")}</div>
           ) : (
             <>
               <ul className="max-h-72 overflow-y-auto">
@@ -186,7 +188,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
                     <input
                       autoFocus
                       className="input"
-                      placeholder="Wallet name"
+                      placeholder={t("Wallet name")}
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                     />
@@ -208,7 +210,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
                         disabled={busy}
                         className="btn-primary text-xs flex-1 py-2"
                       >
-                        {busy ? "..." : "Create"}
+                        {busy ? "..." : t("Create")}
                       </button>
                       <button
                         type="button"
@@ -218,7 +220,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
                         }}
                         className="btn-secondary text-xs py-2"
                       >
-                        Cancel
+                        {t("Cancel")}
                       </button>
                     </div>
                   </form>
@@ -228,7 +230,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
                     onClick={() => setShowCreate(true)}
                     className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-brand-700 hover:bg-brand-50"
                   >
-                    <Plus className="w-4 h-4" /> New Wallet
+                    <Plus className="w-4 h-4" /> {t("New Wallet")}
                   </button>
                 )}
               </div>

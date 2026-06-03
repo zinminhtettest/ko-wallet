@@ -3,10 +3,12 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { SplitBillForm } from "@/components/SplitBillForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getServerT } from "@/lib/user-lang";
 
 export default async function SplitBillPage() {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
+  const t = await getServerT();
   const supabase = createClient();
   const srv = createServiceClient();
 
@@ -40,11 +42,11 @@ export default async function SplitBillPage() {
   return (
     <div className="max-w-xl">
       <Link href="/transactions" className="inline-flex items-center text-sm text-slate-500 mb-4">
-        <ArrowLeft className="w-4 h-4 mr-1" /> Back
+        <ArrowLeft className="w-4 h-4 mr-1" /> {t("Back")}
       </Link>
-      <h1 className="text-2xl font-bold mb-2">Split Bill</h1>
+      <h1 className="text-2xl font-bold mb-2">{t("Split Bill")}</h1>
       <p className="text-sm text-slate-500 mb-6">
-        Family members ထဲ ပိုက်ဆံ စျေးနဲ့ မှ်ဝေပါ — each person ရဲ့ wallet ထဲ equal share expense ဖန်တီးပါမယ်။
+        {t("Share a bill across family members — we create an equal-share expense in each person's wallet.")}
       </p>
       <SplitBillForm
         members={enrichedMembers}

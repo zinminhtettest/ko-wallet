@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Category } from "@/lib/types";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 type Budget = {
   id: string;
@@ -25,6 +26,7 @@ type Status = {
 
 export function BudgetManager({ categories }: { categories: Category[] }) {
   const dialog = useDialog();
+  const t = useT();
   const expenseCats = categories.filter((c) => c.kind === "expense");
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [status, setStatus] = useState<Status[]>([]);
@@ -64,7 +66,7 @@ export function BudgetManager({ categories }: { categories: Category[] }) {
   }
 
   async function del(b: Budget) {
-    if (!(await dialog.confirm({ message: "Delete this budget?", destructive: true }))) return;
+    if (!(await dialog.confirm({ message: t("Delete this budget?"), destructive: true }))) return;
     await fetch(`/api/budgets/${b.id}`, { method: "DELETE" });
     load();
   }
@@ -78,19 +80,19 @@ export function BudgetManager({ categories }: { categories: Category[] }) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500">
-          လ စဉ် category တစ်ခုစီအတွက် budget သတ်မှတ်ပါ — 80% / 100% reached ရင် alert ပေး
+          {t("Set a monthly budget per category — alerts when you reach 80% / 100%.")}
         </p>
         <button onClick={() => setShowForm((s) => !s)} className="btn-primary text-sm py-2 px-3">
-          <Plus className="w-4 h-4" /> {showForm ? "Cancel" : "Add Budget"}
+          <Plus className="w-4 h-4" /> {showForm ? t("Cancel") : t("Add Budget")}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={onSubmit} className="card p-5 space-y-3">
           <div>
-            <label className="label">Category</label>
+            <label className="label">{t("Category")}</label>
             <select className="input" value={catId} onChange={(e) => setCatId(e.target.value)} required>
-              <option value="">— select —</option>
+              <option value="">{t("— select —")}</option>
               {expenseCats.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -100,11 +102,11 @@ export function BudgetManager({ categories }: { categories: Category[] }) {
           </div>
           <div className="grid grid-cols-[1fr,100px] gap-2">
             <div>
-              <label className="label">Monthly Limit</label>
+              <label className="label">{t("Monthly Limit")}</label>
               <input className="input" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} required />
             </div>
             <div>
-              <label className="label">Currency</label>
+              <label className="label">{t("Currency")}</label>
               <select className="input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
                 <option value="THB">THB</option>
                 <option value="MMK">MMK</option>
@@ -113,15 +115,15 @@ export function BudgetManager({ categories }: { categories: Category[] }) {
             </div>
           </div>
           <button type="submit" disabled={saving} className="btn-primary w-full py-2.5">
-            {saving ? "Saving..." : "Save Budget"}
+            {saving ? t("Saving...") : t("Save Budget")}
           </button>
         </form>
       )}
 
       {loading ? (
-        <div className="card p-8 text-center text-slate-500">Loading…</div>
+        <div className="card p-8 text-center text-slate-500">{t("Loading…")}</div>
       ) : merged.length === 0 ? (
-        <div className="card p-8 text-center text-slate-500">No budgets set yet.</div>
+        <div className="card p-8 text-center text-slate-500">{t("No budgets set yet.")}</div>
       ) : (
         <ul className="space-y-3">
           {merged.map((b) => {
@@ -131,7 +133,7 @@ export function BudgetManager({ categories }: { categories: Category[] }) {
             return (
               <li key={b.id} className="card p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="font-medium">{b.categories?.name || "Category"}</div>
+                  <div className="font-medium">{b.categories?.name || t("Category")}</div>
                   <button onClick={() => del(b)} className="p-1.5 hover:bg-red-50 rounded">
                     <Trash2 className="w-4 h-4 text-red-500" />
                   </button>

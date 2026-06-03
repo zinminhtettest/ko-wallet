@@ -3,6 +3,7 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { formatMoney } from "@/lib/utils";
 import { PrintButton } from "@/components/PrintButton";
 import { ClientDate } from "@/components/ClientDate";
+import { getServerT } from "@/lib/user-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function TaxReportPage({
 }) {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
+  const t = await getServerT();
   const supabase = createClient();
   const year = parseInt(searchParams.year || String(new Date().getUTCFullYear()));
   const start = new Date(Date.UTC(year, 0, 1));
@@ -64,7 +66,7 @@ export default async function TaxReportPage({
 
       <div className="no-print mb-6 flex items-center justify-between">
         <a href="/reports" className="text-sm text-brand-600 underline">
-          ← Back to Reports
+          ← {t("Back to Reports")}
         </a>
         <div className="flex gap-2">
           <a
@@ -84,15 +86,15 @@ export default async function TaxReportPage({
       </div>
 
       <div className="border-b pb-4 mb-6">
-        <h1 className="text-3xl font-bold">Tax Report</h1>
+        <h1 className="text-3xl font-bold">{t("Tax Report")}</h1>
         <div className="text-slate-600">
-          <div><b>Wallet:</b> {ctx.workspace.name}</div>
-          <div><b>Tax Year:</b> {year}</div>
-          <div><b>Generated:</b> <ClientDate value={new Date()} withTime /></div>
+          <div><b>{t("Wallet")}:</b> {ctx.workspace.name}</div>
+          <div><b>{t("Tax Year")}:</b> {year}</div>
+          <div><b>{t("Generated")}:</b> <ClientDate value={new Date()} withTime /></div>
         </div>
       </div>
 
-      <h2 className="text-xl font-bold mb-3">Annual Income</h2>
+      <h2 className="text-xl font-bold mb-3">{t("Annual Income")}</h2>
       {Object.keys(incomeByCur).length === 0 ? (
         <p className="text-slate-500 italic mb-6">No income recorded in {year}.</p>
       ) : (

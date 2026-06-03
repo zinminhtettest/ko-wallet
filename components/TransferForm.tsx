@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 
 type Wallet = {
   workspace_id: string;
@@ -17,6 +18,7 @@ export function TransferForm({
   defaultFromId: string;
 }) {
   const router = useRouter();
+  const t = useT();
   const [fromId, setFromId] = useState(defaultFromId);
   const [toId, setToId] = useState(
     wallets.find((w) => w.workspace_id !== defaultFromId)?.workspace_id || ""
@@ -35,17 +37,17 @@ export function TransferForm({
     e.preventDefault();
     setErr(null);
     if (!fromId || !toId || fromId === toId) {
-      setErr("Wallet ၂ ခု မတူအောင် ရွေးပါ");
+      setErr(t("Pick two different wallets"));
       return;
     }
     const fAmt = parseFloat(fromAmount);
     if (!fAmt || fAmt <= 0) {
-      setErr("Amount မှန်ကန်တဲ့ ဂဏန်း ထည့်ပါ");
+      setErr(t("Enter a valid amount"));
       return;
     }
     const tAmt = sameCurrency ? fAmt : parseFloat(toAmount);
     if (!tAmt || tAmt <= 0) {
-      setErr("To amount မှန်ကန်တဲ့ ဂဏန်း ထည့်ပါ");
+      setErr(t("Enter a valid To amount"));
       return;
     }
     setSaving(true);
@@ -65,7 +67,7 @@ export function TransferForm({
     const j = await r.json();
     setSaving(false);
     if (!r.ok) {
-      setErr(j?.error || "Transfer failed");
+      setErr(j?.error || t("Transfer failed"));
       return;
     }
     router.push("/dashboard");
@@ -75,7 +77,7 @@ export function TransferForm({
   return (
     <form onSubmit={onSubmit} className="space-y-5 max-w-xl">
       <div>
-        <label className="label">From wallet</label>
+        <label className="label">{t("From wallet")}</label>
         <select className="input" value={fromId} onChange={(e) => setFromId(e.target.value)}>
           {wallets.map((w) => (
             <option key={w.workspace_id} value={w.workspace_id}>
@@ -90,9 +92,9 @@ export function TransferForm({
       </div>
 
       <div>
-        <label className="label">To wallet</label>
+        <label className="label">{t("To wallet")}</label>
         <select className="input" value={toId} onChange={(e) => setToId(e.target.value)}>
-          <option value="">— select —</option>
+          <option value="">{t("— select —")}</option>
           {wallets
             .filter((w) => w.workspace_id !== fromId)
             .map((w) => (
@@ -105,7 +107,7 @@ export function TransferForm({
 
       <div>
         <label className="label">
-          Amount {fromWs ? `(${fromWs.default_currency})` : ""}
+          {t("Amount")} {fromWs ? `(${fromWs.default_currency})` : ""}
         </label>
         <input
           className="input text-xl font-semibold"
@@ -120,7 +122,7 @@ export function TransferForm({
       {!sameCurrency && toWs && (
         <div>
           <label className="label">
-            Converted amount in {toWs.default_currency}
+            {t("Converted amount in")} {toWs.default_currency}
           </label>
           <input
             className="input text-xl font-semibold"
@@ -131,25 +133,25 @@ export function TransferForm({
             required
           />
           <p className="text-xs text-slate-500 mt-1">
-            FX rate ကိုကိုယ်တိုင်ဖြည့်ပါ (ဥပမာ 1000 THB → 100,000 MMK)
+            {t("Fill the FX rate manually (e.g. 1000 THB → 100,000 MMK)")}
           </p>
         </div>
       )}
 
       <div>
-        <label className="label">Note (optional)</label>
+        <label className="label">{t("Note (optional)")}</label>
         <input
           className="input"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="e.g. Move savings to business wallet"
+          placeholder={t("e.g. Move savings to business wallet")}
         />
       </div>
 
       {err && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{err}</div>}
 
       <button type="submit" disabled={saving} className="btn-primary w-full py-3">
-        {saving ? "Saving..." : "Save Transfer"}
+        {saving ? t("Saving...") : t("Save Transfer")}
       </button>
     </form>
   );

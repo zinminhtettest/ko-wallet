@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Sparkles, X, Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 
 type Card = {
   icon: string;
@@ -39,6 +40,7 @@ export function AIInsightsButton() {
   const [result, setResult] = useState<Result | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const t = useT();
 
   // Mounted flag lets us safely use document.body for the portal target
   // (document doesn't exist during SSR).
@@ -114,9 +116,9 @@ export function AIInsightsButton() {
                 <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">AI Insights</h2>
+                <h2 className="text-xl font-bold">{t("AI Insights")}</h2>
                 <p className="text-sm text-slate-500">
-                  Past 6 weeks analyzed by AI
+                  {t("Past 6 weeks analyzed by AI")}
                 </p>
               </div>
             </div>
@@ -124,7 +126,7 @@ export function AIInsightsButton() {
             {!result && !loading && (
               <>
                 <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
-                  Choose AI model:
+                  {t("Choose AI model:")}
                 </p>
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   {PROVIDERS.map((p) => (
@@ -152,7 +154,7 @@ export function AIInsightsButton() {
                 </div>
 
                 <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
-                  Pick the language for AI output:
+                  {t("Pick the language for AI output:")}
                 </p>
                 <div className="grid grid-cols-3 gap-2 mb-5">
                   {LANGS.map((l) => (
@@ -175,7 +177,7 @@ export function AIInsightsButton() {
                   disabled={!lang}
                   className="btn-primary w-full py-3"
                 >
-                  ✨ Analyze with {provider === "deepseek" ? "DeepSeek" : "Gemini"}
+                  ✨ {t("Analyze with")} {provider === "deepseek" ? "DeepSeek" : "Gemini"}
                 </button>
               </>
             )}
@@ -183,7 +185,7 @@ export function AIInsightsButton() {
             {loading && (
               <div className="py-12 flex flex-col items-center gap-3 text-slate-500">
                 <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-                <div>AI က ၆ ပတ်စာ data analyze နေပါတယ်...</div>
+                <div>{t("AI is analyzing 6 weeks of data...")}</div>
               </div>
             )}
 
@@ -196,7 +198,7 @@ export function AIInsightsButton() {
             {result && (
               <div className="space-y-4">
                 <div className="card p-4 bg-gradient-to-br from-brand-50 to-white dark:from-brand-950/30 dark:to-slate-900 border-brand-200">
-                  <div className="text-xs text-brand-600 font-semibold mb-1">SUMMARY</div>
+                  <div className="text-xs text-brand-600 font-semibold mb-1">{t("SUMMARY")}</div>
                   <p className="text-sm leading-relaxed">{result.summary}</p>
                 </div>
 
@@ -236,7 +238,7 @@ export function AIInsightsButton() {
                   }}
                   className="btn-secondary w-full"
                 >
-                  Run again with different language
+                  {t("Run again with different language")}
                 </button>
               </div>
             )}
@@ -249,8 +251,8 @@ export function AIInsightsButton() {
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition grid place-items-center"
-        title="AI Insights"
-        aria-label="AI Insights"
+        title={t("AI Insights")}
+        aria-label={t("AI Insights")}
       >
         <Sparkles className="w-6 h-6" />
       </button>

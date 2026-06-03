@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { Mic, Square, Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 
 type Parsed = {
   kind: "expense" | "income" | null;
@@ -21,6 +22,7 @@ export function VoiceCaptureButton({
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const t = useT();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -39,7 +41,7 @@ export function VoiceCaptureButton({
           type: mr.mimeType || "audio/webm",
         });
         if (blob.size === 0) {
-          setErr("Empty recording");
+          setErr(t("Empty recording"));
           return;
         }
         await upload(blob);
@@ -48,7 +50,7 @@ export function VoiceCaptureButton({
       mr.start();
       setRecording(true);
     } catch (e: any) {
-      setErr("Microphone permission denied or unsupported");
+      setErr(t("Microphone permission denied or unsupported"));
     }
   }
 
@@ -65,9 +67,9 @@ export function VoiceCaptureButton({
     try {
       const r = await fetch("/api/voice/parse", { method: "POST", body: fd });
       const j = await r.json();
-      if (!r.ok) throw new Error(j?.error || "Failed");
+      if (!r.ok) throw new Error(j?.error || t("Failed"));
       if ((j.parsed?.confidence ?? 0) < 0.3) {
-        setErr(`🎤 Could not understand: "${j.parsed?.transcript || ""}"`);
+        setErr(`🎤 ${t("Could not understand")}: "${j.parsed?.transcript || ""}"`);
         return;
       }
       onParsed(j.parsed);
@@ -92,15 +94,15 @@ export function VoiceCaptureButton({
       >
         {busy ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" /> Sending to AI...
+            <Loader2 className="w-4 h-4 animate-spin" /> {t("Sending to AI...")}
           </>
         ) : recording ? (
           <>
-            <Square className="w-4 h-4" /> Stop &amp; Use
+            <Square className="w-4 h-4" /> {t("Stop & Use")}
           </>
         ) : (
           <>
-            <Mic className="w-4 h-4" /> Speak to auto-fill
+            <Mic className="w-4 h-4" /> {t("Speak to auto-fill")}
           </>
         )}
       </button>

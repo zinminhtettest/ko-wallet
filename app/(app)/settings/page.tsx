@@ -31,7 +31,7 @@ export default async function SettingsPage() {
         <div className="flex-1">
           <div className="font-semibold">{t("Wallet Settings")}</div>
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            Rename wallet, change default currency
+            {t("Rename wallet, change default currency")}
           </div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
@@ -43,7 +43,7 @@ export default async function SettingsPage() {
         </div>
         <div className="flex-1">
           <div className="font-semibold">{t("Investments")}</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Stocks, crypto, gold positions</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Stocks, crypto, gold positions")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -54,7 +54,7 @@ export default async function SettingsPage() {
         </div>
         <div className="flex-1">
           <div className="font-semibold">{t("Bank Accounts")}</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Track balances across banks</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Track balances across banks")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -64,8 +64,8 @@ export default async function SettingsPage() {
           <Users className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Family Workspace</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Invite family members to share this workspace</div>
+          <div className="font-semibold">{t("Family Workspace")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Invite family members to share this workspace")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -75,8 +75,8 @@ export default async function SettingsPage() {
           <Tag className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Categories</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Add, edit, or delete custom categories</div>
+          <div className="font-semibold">{t("Categories")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Add, edit, or delete custom categories")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -86,8 +86,8 @@ export default async function SettingsPage() {
           <PieChart className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Budgets</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Set monthly limits per category + alerts</div>
+          <div className="font-semibold">{t("Budgets")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Set monthly limits per category + alerts")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -97,8 +97,8 @@ export default async function SettingsPage() {
           <Repeat className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Recurring Transactions</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Subscriptions, rent, salary — auto-create on schedule</div>
+          <div className="font-semibold">{t("Recurring Transactions")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Subscriptions, rent, salary — auto-create on schedule")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -108,8 +108,8 @@ export default async function SettingsPage() {
           <MessageCircle className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Telegram Bot</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Add transactions and get alerts via Telegram</div>
+          <div className="font-semibold">{t("Telegram Bot")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Add transactions and get alerts via Telegram")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -119,8 +119,8 @@ export default async function SettingsPage() {
           <Send className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Auto Digest</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Daily/weekly summary pushed to Telegram</div>
+          <div className="font-semibold">{t("Auto Digest")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Daily/weekly summary pushed to Telegram")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -130,8 +130,8 @@ export default async function SettingsPage() {
           <ArrowRightLeft className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Transfer Between Wallets</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Move money from one wallet to another</div>
+          <div className="font-semibold">{t("Transfer Between Wallets")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Move money from one wallet to another")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -141,8 +141,8 @@ export default async function SettingsPage() {
           <Target className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Saving Goals</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Set targets and track progress</div>
+          <div className="font-semibold">{t("Saving Goals")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Set targets and track progress")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -152,8 +152,8 @@ export default async function SettingsPage() {
           <Globe className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Currency Rates</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">FX rates for Net Worth combined view</div>
+          <div className="font-semibold">{t("Currency Rates")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("FX rates for Net Worth combined view")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -163,8 +163,8 @@ export default async function SettingsPage() {
           <Briefcase className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Clients & Invoices</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Track outstanding invoices for your business</div>
+          <div className="font-semibold">{t("Clients & Invoices")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Track outstanding invoices for your business")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -174,8 +174,8 @@ export default async function SettingsPage() {
           <Mail className="w-5 h-5" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold">Krungthai Bank Auto-Import</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">Connect Gmail to auto-import bank transactions</div>
+          <div className="font-semibold">{t("Krungthai Bank Auto-Import")}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("Connect Gmail to auto-import bank transactions")}</div>
         </div>
         <div className="text-slate-400 dark:text-slate-500">→</div>
       </Link>
@@ -190,7 +190,7 @@ export default async function SettingsPage() {
             <LogOut className="w-5 h-5" />
           </div>
           <div className="flex-1">
-            <div className="font-semibold text-red-600 dark:text-red-400">Sign out</div>
+            <div className="font-semibold text-red-600 dark:text-red-400">{t("Sign out")}</div>
             <div className="text-sm text-slate-500 dark:text-slate-400">
               {ctx.user.email}
             </div>

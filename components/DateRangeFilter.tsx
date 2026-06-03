@@ -1,6 +1,7 @@
 "use client";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
+import { useT } from "@/lib/i18n-client";
 
 const PRESETS: { key: string; label: string }[] = [
   { key: "today", label: "Today" },
@@ -19,6 +20,7 @@ export function DateRangeFilter() {
   const [showCustom, setShowCustom] = useState(preset === "custom");
   const [from, setFrom] = useState(sp.get("from") || "");
   const [to, setTo] = useState(sp.get("to") || "");
+  const t = useT();
 
   function apply(p: string, f?: string, t?: string) {
     const params = new URLSearchParams(sp.toString());
@@ -49,7 +51,7 @@ export function DateRangeFilter() {
                 : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
             }`}
           >
-            {p.label}
+            {t(p.label)}
           </button>
         ))}
         <button
@@ -60,13 +62,13 @@ export function DateRangeFilter() {
               : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
           }`}
         >
-          Custom
+          {t("Custom")}
         </button>
       </div>
       {showCustom && (
         <div className="flex flex-wrap items-end gap-2 pt-2">
           <div>
-            <label className="block text-xs text-slate-500 mb-1">From</label>
+            <label className="block text-xs text-slate-500 mb-1">{t("From")}</label>
             <input
               type="date"
               value={from}
@@ -75,7 +77,7 @@ export function DateRangeFilter() {
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">To</label>
+            <label className="block text-xs text-slate-500 mb-1">{t("To")}</label>
             <input
               type="date"
               value={to}
@@ -88,7 +90,7 @@ export function DateRangeFilter() {
             disabled={!from || !to}
             className="btn-primary text-sm py-1.5 disabled:opacity-50"
           >
-            Apply
+            {t("Apply")}
           </button>
         </div>
       )}

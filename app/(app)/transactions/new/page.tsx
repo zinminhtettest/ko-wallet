@@ -3,6 +3,7 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { TransactionForm } from "@/components/TransactionForm";
 import Link from "next/link";
 import { ArrowLeft, Camera } from "lucide-react";
+import { getServerT } from "@/lib/user-lang";
 
 export default async function NewTransactionPage({
   searchParams,
@@ -19,6 +20,7 @@ export default async function NewTransactionPage({
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
   const supabase = createClient();
+  const t = await getServerT();
   const { data: categories } = await supabase
     .from("categories")
     .select("*")
@@ -49,19 +51,19 @@ export default async function NewTransactionPage({
     <div className="max-w-2xl">
       <div className="flex items-center justify-between mb-4">
         <Link href="/transactions" className="inline-flex items-center text-sm text-slate-500">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          <ArrowLeft className="w-4 h-4 mr-1" /> {t("Back")}
         </Link>
         <Link
           href="/transactions/scan"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-300 bg-brand-50 text-brand-700 text-sm"
         >
-          <Camera className="w-4 h-4" /> Scan Receipt
+          <Camera className="w-4 h-4" /> {t("Scan Receipt")}
         </Link>
       </div>
-      <h1 className="text-2xl font-bold mb-6">Add Transaction</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("Add Transaction")}</h1>
       {hasPrefill && (
         <div className="mb-4 rounded-lg bg-brand-50 border border-brand-200 text-brand-800 text-sm p-3">
-          ✨ AI prefilled from receipt — review and Save.
+          ✨ {t("AI prefilled from receipt — review and Save.")}
         </div>
       )}
       <TransactionForm

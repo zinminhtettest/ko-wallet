@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 
 export function ImportNowButton() {
   const router = useRouter();
+  const t = useT();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
@@ -18,10 +20,10 @@ export function ImportNowButton() {
         body: JSON.stringify({ days: 30 }),
       });
       const j = await r.json();
-      setResult(`✓ Added: ${j.added}, Skipped: ${j.skipped}, Errors: ${j.errors}`);
+      setResult(`✓ ${t("Added")}: ${j.added}, ${t("Skipped")}: ${j.skipped}, ${t("Errors")}: ${j.errors}`);
       router.refresh();
     } catch (e: any) {
-      setResult(`Error: ${e.message}`);
+      setResult(`${t("Error")}: ${e.message}`);
     } finally {
       setLoading(false);
     }
@@ -31,7 +33,7 @@ export function ImportNowButton() {
     <div className="inline-flex flex-col gap-1">
       <button onClick={run} disabled={loading} className="btn-primary text-sm">
         <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-        {loading ? "Syncing..." : "Import Now (last 30 days)"}
+        {loading ? t("Syncing...") : t("Import Now (last 30 days)")}
       </button>
       {result && <span className="text-xs text-slate-600">{result}</span>}
     </div>

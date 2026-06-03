@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Sun, Moon, Monitor, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-client";
 
 type Theme = "light" | "dark" | "system";
 
@@ -20,6 +21,7 @@ function applyTheme(theme: Theme) {
  */
 export function SidebarUtilityPill() {
   const [theme, setTheme] = useState<Theme>("system");
+  const t = useT();
 
   useEffect(() => {
     const stored = (localStorage.getItem("ko_theme") as Theme) || "system";
@@ -32,10 +34,10 @@ export function SidebarUtilityPill() {
     return () => mq.removeEventListener?.("change", handler);
   }, []);
 
-  function choose(t: Theme) {
-    setTheme(t);
-    localStorage.setItem("ko_theme", t);
-    applyTheme(t);
+  function choose(next: Theme) {
+    setTheme(next);
+    localStorage.setItem("ko_theme", next);
+    applyTheme(next);
   }
 
   const themes: { key: Theme; Icon: any; label: string }[] = [
@@ -50,8 +52,8 @@ export function SidebarUtilityPill() {
         <button
           key={key}
           onClick={() => choose(key)}
-          title={label}
-          aria-label={`Theme: ${label}`}
+          title={t(label)}
+          aria-label={`${t("Theme")}: ${t(label)}`}
           className={cn(
             "flex-1 inline-flex items-center justify-center rounded-lg py-1.5 transition",
             theme === key
@@ -66,8 +68,8 @@ export function SidebarUtilityPill() {
       <form action="/auth/signout" method="POST" className="flex-1 flex">
         <button
           type="submit"
-          title="Sign out"
-          aria-label="Sign out"
+          title={t("Sign out")}
+          aria-label={t("Sign out")}
           className="flex-1 inline-flex items-center justify-center rounded-lg py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
         >
           <LogOut className="w-3.5 h-3.5" />

@@ -3,10 +3,12 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { BudgetManager } from "@/components/BudgetManager";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getServerT } from "@/lib/user-lang";
 
 export default async function BudgetsPage() {
   const ctx = await getActiveWorkspace();
   if (!ctx) return null;
+  const t = await getServerT();
   const supabase = createClient();
   const { data: cats } = await supabase
     .from("categories")
@@ -16,9 +18,9 @@ export default async function BudgetsPage() {
   return (
     <div className="space-y-5 max-w-2xl">
       <Link href="/settings" className="inline-flex items-center text-sm text-slate-500 hover:text-slate-900">
-        <ArrowLeft className="w-4 h-4 mr-1" /> Back to Settings
+        <ArrowLeft className="w-4 h-4 mr-1" /> {t("Back to Settings")}
       </Link>
-      <h1 className="text-2xl font-bold">Budgets</h1>
+      <h1 className="text-2xl font-bold">{t("Budgets")}</h1>
       <BudgetManager categories={(cats ?? []) as any} />
     </div>
   );

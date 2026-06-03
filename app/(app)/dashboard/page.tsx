@@ -11,6 +11,7 @@ import { convert } from "@/lib/fx";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { Currency } from "@/lib/types";
+import { getServerT } from "@/lib/user-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function DashboardPage({
   if (!ctx) return null;
   const supabase = createClient();
   const range = parseRangeFromSearchParams(searchParams);
+  const t = await getServerT();
 
   // Load FX user settings for combined net worth
   const { data: settings } = await supabase
@@ -141,14 +143,14 @@ export default async function DashboardPage({
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold">{t("Dashboard")}</h1>
           <p className="text-sm text-slate-500">
             {range.label} · <ClientDate value={range.from.toISOString()} /> → <ClientDate value={range.to.toISOString()} />
           </p>
         </div>
         <div className="hidden md:block">
           <Link href="/transactions/new" className="btn-primary">
-            <Plus className="w-4 h-4" /> Add Transaction
+            <Plus className="w-4 h-4" /> {t("Add Transaction")}
           </Link>
         </div>
       </div>
@@ -160,7 +162,7 @@ export default async function DashboardPage({
       <div className="card">
         <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2 min-w-0">
-            <h2 className="font-semibold">Recent Transactions</h2>
+            <h2 className="font-semibold">{t("Recent Transactions")}</h2>
             {kindFilter && (
               <span
                 className={`text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -169,7 +171,7 @@ export default async function DashboardPage({
                     : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                 }`}
               >
-                {kindFilter === "income" ? "Income only" : "Expense only"}
+                {kindFilter === "income" ? t("Income only") : t("Expense only")}
               </span>
             )}
             {kindFilter && (
@@ -181,19 +183,19 @@ export default async function DashboardPage({
                 }).toString()}`}
                 className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline"
               >
-                Clear
+                {t("Clear")}
               </Link>
             )}
           </div>
           <Link href="/transactions" className="text-sm text-brand-600 hover:underline">
-            View all
+            {t("View all")}
           </Link>
         </div>
         {recent.length === 0 ? (
           <div className="p-10 text-center text-slate-500">
-            <p className="mb-3">No transactions in this range.</p>
+            <p className="mb-3">{t("No transactions in this range.")}</p>
             <Link href="/transactions/new" className="btn-primary">
-              <Plus className="w-4 h-4" /> Add Transaction
+              <Plus className="w-4 h-4" /> {t("Add Transaction")}
             </Link>
           </div>
         ) : (

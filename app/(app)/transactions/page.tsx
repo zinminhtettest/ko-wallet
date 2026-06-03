@@ -5,6 +5,8 @@ import { DateRangeFilter } from "@/components/DateRangeFilter";
 import { TransactionRow } from "@/components/TransactionRow";
 import Link from "next/link";
 import { Plus, Download, Users, Upload } from "lucide-react";
+import { getServerT } from "@/lib/user-lang";
+import type { T } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,7 @@ export default async function TransactionsPage({
   if (!ctx) return null;
   const supabase = createClient();
   const range = parseRangeFromSearchParams(searchParams);
+  const t = await getServerT();
 
   // Build the query. We try the full column list first (including the newer
   // attribution / tax columns) and fall back to the legacy column set if any
@@ -109,9 +112,9 @@ export default async function TransactionsPage({
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold">Transactions</h1>
+          <h1 className="text-2xl font-bold">{t("Transactions")}</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {list.length} records · {range.label}
+            {list.length} {t("records")} · {range.label}
           </p>
         </div>
         {/* Desktop-only action row — mobile uses the chip row below */}
@@ -119,26 +122,26 @@ export default async function TransactionsPage({
           <a
             href={exportHref}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-            title="Export CSV (Excel-friendly)"
+            title={t("Export CSV (Excel-friendly)")}
           >
-            <Download className="w-4 h-4" /> Export
+            <Download className="w-4 h-4" /> {t("Export")}
           </a>
           <Link
             href="/transactions/import"
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-            title="Bulk import CSV"
+            title={t("Bulk import CSV")}
           >
-            <Upload className="w-4 h-4" /> Import
+            <Upload className="w-4 h-4" /> {t("Import")}
           </Link>
           <Link
             href="/transactions/split"
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-            title="Split bill among family"
+            title={t("Split bill among family")}
           >
-            <Users className="w-4 h-4" /> Split
+            <Users className="w-4 h-4" /> {t("Split")}
           </Link>
           <Link href="/transactions/new" className="btn-primary">
-            <Plus className="w-4 h-4" /> Add
+            <Plus className="w-4 h-4" /> {t("Add")}
           </Link>
         </div>
       </div>
@@ -149,28 +152,28 @@ export default async function TransactionsPage({
           href={exportHref}
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0"
         >
-          <Download className="w-3.5 h-3.5" /> Export
+          <Download className="w-3.5 h-3.5" /> {t("Export")}
         </a>
         <Link
           href="/transactions/import"
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0"
         >
-          <Upload className="w-3.5 h-3.5" /> Import
+          <Upload className="w-3.5 h-3.5" /> {t("Import")}
         </Link>
         <Link
           href="/transactions/split"
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap flex-shrink-0"
         >
-          <Users className="w-3.5 h-3.5" /> Split
+          <Users className="w-3.5 h-3.5" /> {t("Split")}
         </Link>
       </div>
 
       <DateRangeFilter />
 
       <div className="flex gap-2 flex-wrap text-sm">
-        <FilterChip href={withKind()} label="All" active={!searchParams.kind} />
-        <FilterChip href={withKind("expense")} label="Expenses" active={searchParams.kind === "expense"} />
-        <FilterChip href={withKind("income")} label="Income" active={searchParams.kind === "income"} />
+        <FilterChip href={withKind()} label={t("All")} active={!searchParams.kind} />
+        <FilterChip href={withKind("expense")} label={t("Expenses")} active={searchParams.kind === "expense"} />
+        <FilterChip href={withKind("income")} label={t("Income")} active={searchParams.kind === "income"} />
       </div>
 
       {missingMigration && (
@@ -184,16 +187,16 @@ export default async function TransactionsPage({
 
       {fatalError && (
         <div className="rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm p-3">
-          Query error: {fatalError.message}
+          {t("Query error")}: {fatalError.message}
         </div>
       )}
 
       <div className="card overflow-hidden">
         {list.length === 0 ? (
           <div className="p-10 text-center text-slate-500">
-            <p className="mb-3">No transactions in this range.</p>
+            <p className="mb-3">{t("No transactions in this range.")}</p>
             <Link href="/transactions/new" className="btn-primary">
-              <Plus className="w-4 h-4" /> Add Transaction
+              <Plus className="w-4 h-4" /> {t("Add Transaction")}
             </Link>
           </div>
         ) : (

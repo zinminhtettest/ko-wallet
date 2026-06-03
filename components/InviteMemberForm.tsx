@@ -3,10 +3,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
   const dialog = useDialog();
+  const t = useT();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
         body: JSON.stringify({ workspaceId, email: email.trim().toLowerCase() }),
       });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error || "Failed to create invite");
+      if (!r.ok) throw new Error(j.error || t("Failed to create invite"));
       setLink(j.url);
       setEmail("");
       router.refresh();
@@ -35,7 +37,7 @@ export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
 
   async function copy() {
     if (!link) return;
-    try { await navigator.clipboard.writeText(link); dialog.notify({ kind: "success", message: "Link copied!" }); } catch {}
+    try { await navigator.clipboard.writeText(link); dialog.notify({ kind: "success", message: t("Link copied!") }); } catch {}
   }
 
   return (
@@ -51,16 +53,16 @@ export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
         />
         <button disabled={loading} className="btn-primary">
           <UserPlus className="w-4 h-4" />
-          {loading ? "..." : "Invite"}
+          {loading ? "..." : t("Invite")}
         </button>
       </div>
       {err && <div className="text-red-700 text-sm">{err}</div>}
       {link && (
         <div className="rounded-lg bg-green-50 p-3 text-sm">
-          <div className="font-medium text-green-800 mb-1">Invite created — share this link:</div>
+          <div className="font-medium text-green-800 mb-1">{t("Invite created — share this link:")}</div>
           <div className="break-all text-xs text-slate-700">{link}</div>
           <button type="button" onClick={copy} className="text-xs text-brand-600 mt-1 hover:underline">
-            Copy link
+            {t("Copy link")}
           </button>
         </div>
       )}

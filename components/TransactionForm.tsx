@@ -6,6 +6,7 @@ import { Category, Currency, TxKind } from "@/lib/types";
 import { Trash2 } from "lucide-react";
 import { VoiceCaptureButton } from "@/components/VoiceCaptureButton";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 // Convert a stored ISO timestamp (UTC) to the "YYYY-MM-DDTHH:mm" format that
 // <input type="datetime-local"> expects in the BROWSER'S local timezone.
@@ -53,6 +54,7 @@ export function TransactionForm({
   const router = useRouter();
   const supabase = createClient();
   const dialog = useDialog();
+  const t = useT();
 
   const [kind, setKind] = useState<TxKind>((existing?.kind as TxKind) || "expense");
   const [amount, setAmount] = useState<string>(
@@ -83,13 +85,13 @@ export function TransactionForm({
     setSaving(true);
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) {
-      setErr("Enter a valid amount");
+      setErr(t("Enter a valid amount"));
       setSaving(false);
       return;
     }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setErr("Login session expired"); setSaving(false); return;
+      setErr(t("Login session expired")); setSaving(false); return;
     }
     const displayName =
       (user.user_metadata as any)?.full_name ||
@@ -160,7 +162,7 @@ export function TransactionForm({
 
   async function onDelete() {
     if (!existing) return;
-    if (!(await dialog.confirm({ message: "Delete this transaction?", destructive: true }))) return;
+    if (!(await dialog.confirm({ message: t("Delete this transaction?"), destructive: true }))) return;
     const { error } = await supabase.from("transactions").delete().eq("id", existing.id);
     if (error) { setErr(error.message); return; }
     router.push("/transactions");
@@ -200,7 +202,7 @@ export function TransactionForm({
               kind === k ? (k === "expense" ? "bg-red-500 text-white" : "bg-green-500 text-white") : "text-slate-600"
             }`}
           >
-            {k === "expense" ? "Expense" : "Income"}
+            {k === "expense" ? t("Expense") : t("Income")}
           </button>
         ))}
       </div>
@@ -208,7 +210,7 @@ export function TransactionForm({
       {/* Amount + currency */}
       <div className="grid grid-cols-[1fr,110px] gap-2">
         <div>
-          <label className="label">Amount</label>
+          <label className="label">{t("Amount")}</label>
           <input
             className="input text-2xl font-semibold"
             inputMode="decimal"
@@ -219,7 +221,7 @@ export function TransactionForm({
           />
         </div>
         <div>
-          <label className="label">Currency</label>
+          <label className="label">{t("Currency")}</label>
           <select className="input" value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}>
             <option value="THB">THB ฿</option>
             <option value="MMK">MMK K</option>
@@ -230,7 +232,7 @@ export function TransactionForm({
 
       {/* Category */}
       <div>
-        <label className="label">Category</label>
+        <label className="label">{t("Category")}</label>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           <button
             type="button"
@@ -244,7 +246,7 @@ export function TransactionForm({
             <div className="w-8 h-8 rounded-lg grid place-items-center text-white text-[10px] font-bold bg-slate-400">
               —
             </div>
-            <span className="text-xs">Uncategorized</span>
+            <span className="text-xs">{t("Uncategorized")}</span>
           </button>
           {filteredCats.map((c) => {
             const isEmoji = !/^[a-z\-]+$/i.test(c.icon);
@@ -275,17 +277,17 @@ export function TransactionForm({
       </div>
 
       <div>
-        <label className="label">Merchant (where you spent it)</label>
-        <input className="input" value={merchant} onChange={(e) => setMerchant(e.target.value)} placeholder="e.g. 7-Eleven, Lotus's" />
+        <label className="label">{t("Merchant (where you spent it)")}</label>
+        <input className="input" value={merchant} onChange={(e) => setMerchant(e.target.value)} placeholder={t("e.g. 7-Eleven, Lotus's")} />
       </div>
 
       <div>
-        <label className="label">Note (optional)</label>
-        <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="memo..." />
+        <label className="label">{t("Note (optional)")}</label>
+        <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("memo...")} />
       </div>
 
       <div>
-        <label className="label">Date & Time</label>
+        <label className="label">{t("Date & Time")}</label>
         <input
           type="datetime-local"
           className="input"
@@ -301,14 +303,14 @@ export function TransactionForm({
           onChange={(e) => setTaxDeductible(e.target.checked)}
           className="rounded"
         />
-        💼 Tax-deductible (business expense)
+        💼 {t("Tax-deductible (business expense)")}
       </label>
 
       {err && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{err}</div>}
 
       <div className="flex gap-2">
         <button type="submit" disabled={saving} className="btn-primary flex-1 py-3">
-          {saving ? "Saving..." : existing ? "Update Transaction" : "Save Transaction"}
+          {saving ? t("Saving...") : existing ? t("Update Transaction") : t("Save Transaction")}
         </button>
         {existing && (
           <button type="button" onClick={onDelete} className="btn-danger py-3">
