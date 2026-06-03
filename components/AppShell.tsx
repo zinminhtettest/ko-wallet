@@ -131,7 +131,26 @@ export function AppShell({
 
         <div className="px-4 py-5 md:px-8 md:py-8 pb-24 md:pb-8">{children}</div>
 
-        {/* Mobile FAB removed — Add Transaction now lives inside the active wallet card. */}
+        {/* Mobile FAB — quick Add Transaction on pages that don't already have
+            an inline Add button (Dashboard has it inside the active wallet card). */}
+        {pathname &&
+          (pathname.startsWith("/transactions") || pathname.startsWith("/reports")) &&
+          !pathname.startsWith("/transactions/new") &&
+          !/^\/transactions\/[^/]+\/edit$/.test(pathname) &&
+          !pathname.startsWith("/transactions/import") &&
+          !pathname.startsWith("/transactions/split") && (
+            <Link
+              href="/transactions/new"
+              aria-label="Add transaction"
+              className="md:hidden fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full text-white shadow-lg active:scale-95 transition grid place-items-center"
+              style={{
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                boxShadow: "0 8px 20px rgba(37, 99, 235, 0.4)",
+              }}
+            >
+              <Plus className="w-7 h-7" strokeWidth={2.5} />
+            </Link>
+          )}
 
         {/* Mobile bottom nav — rounded top corners, edge-to-edge with safe-area padding */}
         <nav
