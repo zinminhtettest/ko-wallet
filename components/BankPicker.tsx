@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { THAI_BANKS } from "@/lib/banks";
 import { Check } from "lucide-react";
+import { useT } from "@/lib/i18n-client";
 
 export function BankPicker({
   connectionId,
@@ -12,6 +13,7 @@ export function BankPicker({
   initialKeys: string[];
 }) {
   const router = useRouter();
+  const t = useT();
   const [selected, setSelected] = useState<Set<string>>(new Set(initialKeys));
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function BankPicker({
   return (
     <div className="space-y-3">
       <div className="text-sm text-slate-600">
-        Bank ဘယ်ဟာတွေက email ပို့တာကို import လုပ်ချင်လဲ ရွေးပါ — တစ်ခုထက်ပို ရွေးနိုင်တယ်။
+        {t("Pick which bank notification emails to import — you can choose more than one.")}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {THAI_BANKS.map((b) => {

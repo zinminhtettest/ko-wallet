@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n-client";
 
 export function CurrencyRatesForm() {
+  const t = useT();
   const [base, setBase] = useState("THB");
   const [thbToMmk, setThbToMmk] = useState("130");
   const [thbToUsd, setThbToUsd] = useState("0.028");
@@ -40,7 +42,7 @@ export function CurrencyRatesForm() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
-        Net Worth combined view အတွက် currency conversion သုံးပါ။ FX rate ကိုကိုယ်တိုင် ဖြည့်ပါ။
+        {t("Used for the combined Net Worth view's currency conversion. Fill in FX rates manually.")}
       </p>
       <div>
         <label className="label">Base currency for Net Worth</label>
@@ -72,7 +74,7 @@ export function CurrencyRatesForm() {
         {saving ? "Saving..." : saved ? "✅ Saved" : "Save Rates"}
       </button>
       <p className="text-xs text-slate-400">
-        ဥပမာ ပစ္စုပ္ပန် rate: 1 USD ≈ 35 THB ≈ 4,500 MMK · 1 THB ≈ 130 MMK ≈ 0.028 USD
+        {t("Example current rate")}: 1 USD ≈ 35 THB ≈ 4,500 MMK · 1 THB ≈ 130 MMK ≈ 0.028 USD
       </p>
     </div>
   );

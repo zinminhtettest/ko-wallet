@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, X, Building2 } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 type Account = {
   id: string;
@@ -15,6 +16,7 @@ type Account = {
 
 export function BankAccountsManager({ defaultCurrency }: { defaultCurrency: string }) {
   const dialog = useDialog();
+  const t = useT();
   const [list, setList] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -86,7 +88,7 @@ export function BankAccountsManager({ defaultCurrency }: { defaultCurrency: stri
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500">
-          Bank account balances ကို ကိုယ်တိုင် တွေ့ပြီး update လုပ်ပါ
+          {t("Update bank account balances yourself, whenever you check them.")}
         </p>
         <button onClick={() => setShowAdd((s) => !s)} className="btn-primary text-sm py-2 px-3">
           <Plus className="w-4 h-4" /> {showAdd ? "Cancel" : "Add Account"}

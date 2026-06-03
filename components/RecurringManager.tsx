@@ -5,6 +5,7 @@ import { Plus, Trash2, Pause, Play } from "lucide-react";
 import { Category } from "@/lib/types";
 import { ClientDate } from "@/components/ClientDate";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 type Rule = {
   id: string;
@@ -24,6 +25,7 @@ type Rule = {
 export function RecurringManager({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const dialog = useDialog();
+  const t = useT();
   const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -108,7 +110,7 @@ export function RecurringManager({ categories }: { categories: Category[] }) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500">
-          Subscriptions လို ပုံမှန် ပြန်ဖြစ်တဲ့ transactions တွေ — schedule အလိုက် auto-create
+          {t("Subscriptions and bills that repeat — auto-create on a schedule.")}
         </p>
         <button
           onClick={() => setShowForm((s) => !s)}

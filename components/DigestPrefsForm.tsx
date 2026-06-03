@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n-client";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function DigestPrefsForm() {
+  const t = useT();
   const [frequency, setFrequency] = useState<"off" | "daily" | "weekly">("off");
   const [hour, setHour] = useState(20);
   const [day, setDay] = useState(0);
@@ -46,7 +48,7 @@ export function DigestPrefsForm() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
-        Telegram bot က ပုံမှန် summary auto-push ပါမယ်။ Telegram bot link လုပ်ထားရင်သာ အလုပ်လုပ်ပါ။
+        {t("The Telegram bot auto-pushes a periodic summary. Requires a connected Telegram bot.")}
       </p>
 
       <div>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Users, Receipt } from "lucide-react";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 type Invoice = { amount: number; currency: string; status: string };
 type Client = {
@@ -14,6 +15,7 @@ type Client = {
 
 export function ClientsManager({ defaultCurrency }: { defaultCurrency: string }) {
   const dialog = useDialog();
+  const t = useT();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -95,7 +97,7 @@ export function ClientsManager({ defaultCurrency }: { defaultCurrency: string })
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500">
-          Clients + မပေးရသေးတဲ့ invoices (mini-CRM)
+          {t("Clients and outstanding invoices (mini-CRM).")}
         </p>
         <button onClick={() => setShowAdd((s) => !s)} className="btn-primary text-sm py-2 px-3">
           <Plus className="w-4 h-4" /> {showAdd ? "Cancel" : "Add Client"}

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, TrendingUp, TrendingDown, Pencil, X } from "lucide-react";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 type Investment = {
   id: string;
@@ -23,6 +24,7 @@ const TYPES = ["stock", "crypto", "gold", "bond", "etf", "other"];
 
 export function InvestmentsManager() {
   const dialog = useDialog();
+  const t = useT();
   const [list, setList] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -105,7 +107,7 @@ export function InvestmentsManager() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500">
-          Stocks / crypto / gold positions — current prices ကို ကိုယ်တိုင် update လုပ်ပါ
+          {t("Track stocks, crypto, and gold — update current prices yourself.")}
         </p>
         <button onClick={() => setShowAdd((s) => !s)} className="btn-primary text-sm py-2 px-3">
           <Plus className="w-4 h-4" /> {showAdd ? "Cancel" : "Add Position"}

@@ -353,6 +353,25 @@ const my: Dict = {
   "Save Transfer": "လွှဲခြင်း သိမ်း",
   "Open the wallet picker in the sidebar and tap": "Sidebar ရှိ ပိုက်ဆံအိတ် ရွေးချယ်ရန် နှိပ်ပြီး",
   "+ New Wallet": "+ ပိုက်ဆံအိတ်အသစ်",
+
+  // Section subtitles / descriptions
+  "Track stocks, crypto, and gold — update current prices yourself.":
+    "စတော့၊ ခရစ်ပတို၊ ရွှေ ရင်းနှီးမြှုပ်နှံမှုများ စောင့်ကြည့်ပါ — လက်ရှိ ဈေးနှုန်းများကို ကိုယ်တိုင် အပ်ဒိတ်လုပ်ပါ။",
+  "Update bank account balances yourself, whenever you check them.":
+    "ဘဏ်အကောင့်လက်ကျန်များကို စစ်ဆေးတိုင်း ကိုယ်တိုင် အပ်ဒိတ်လုပ်ပါ။",
+  "Subscriptions and bills that repeat — auto-create on a schedule.":
+    "ပုံမှန် ပြန်ဖြစ်တတ်သော အသုံးပြုခများနှင့် ငွေတောင်းခံလွှာများ — အချိန်အလိုက် အလိုအလျောက် ဖန်တီးပါ။",
+  "The Telegram bot auto-pushes a periodic summary. Requires a connected Telegram bot.":
+    "Telegram bot မှ ပုံမှန် အကျဉ်းချုပ်ကို အလိုအလျောက် ပေးပို့ပါမည်။ ချိတ်ဆက်ထားသော Telegram bot လိုအပ်သည်။",
+  "Set a savings target. Progress = income − expense since the goal was created, in the chosen currency.":
+    "ငွေစုပန်းတိုင် သတ်မှတ်ပါ။ တိုးတက်မှု = ပန်းတိုင်ဖန်တီးချိန်မှစ၍ (ဝင်ငွေ − သုံးငွေ)၊ ရွေးချယ်ထားသော ငွေကြေးဖြင့်။",
+  "Used for the combined Net Worth view's currency conversion. Fill in FX rates manually.":
+    "စုစုပေါင်း ပိုက်ဆံအမြင်အတွက် ငွေကြေး ပြောင်းလဲမှုတွင် အသုံးပြုသည်။ ငွေလဲနှုန်းများကို ကိုယ်တိုင် ဖြည့်ပါ။",
+  "Example current rate": "ဥပမာ လက်ရှိ နှုန်း",
+  "Clients and outstanding invoices (mini-CRM).":
+    "Client များနှင့် မပေးရသေးသော ပြေစာများ (mini-CRM)။",
+  "Pick which bank notification emails to import — you can choose more than one.":
+    "မည်သည့်ဘဏ်များ၏ အသိပေး email များကို သွင်းမည်ကို ရွေးပါ — တစ်ခုထက်ပို ရွေးနိုင်သည်။",
 };
 
 /** Pure Thai. */
@@ -693,6 +712,25 @@ const th: Dict = {
   "Save Transfer": "บันทึกการโอน",
   "Open the wallet picker in the sidebar and tap": "เปิดตัวเลือกกระเป๋าในแถบด้านข้างและกด",
   "+ New Wallet": "+ กระเป๋าใหม่",
+
+  // Section subtitles / descriptions
+  "Track stocks, crypto, and gold — update current prices yourself.":
+    "ติดตามหุ้น คริปโต และทอง — อัปเดตราคาปัจจุบันด้วยตัวเอง",
+  "Update bank account balances yourself, whenever you check them.":
+    "อัปเดตยอดเงินในบัญชีธนาคารด้วยตัวเอง ทุกครั้งที่ตรวจสอบ",
+  "Subscriptions and bills that repeat — auto-create on a schedule.":
+    "การสมัครสมาชิกและบิลที่เกิดซ้ำ — สร้างอัตโนมัติตามกำหนดเวลา",
+  "The Telegram bot auto-pushes a periodic summary. Requires a connected Telegram bot.":
+    "บอท Telegram จะส่งสรุปข้อมูลตามรอบให้อัตโนมัติ ต้องเชื่อมต่อบอท Telegram ก่อน",
+  "Set a savings target. Progress = income − expense since the goal was created, in the chosen currency.":
+    "ตั้งเป้าหมายการออม ความคืบหน้า = รายรับ − รายจ่าย นับจากวันที่สร้างเป้าหมาย ในสกุลเงินที่เลือก",
+  "Used for the combined Net Worth view's currency conversion. Fill in FX rates manually.":
+    "ใช้สำหรับการแปลงสกุลเงินในมุมมองมูลค่าสุทธิรวม กรอกอัตราแลกเปลี่ยนเอง",
+  "Example current rate": "ตัวอย่างอัตราปัจจุบัน",
+  "Clients and outstanding invoices (mini-CRM).":
+    "ลูกค้าและใบแจ้งหนี้ค้างชำระ (mini-CRM)",
+  "Pick which bank notification emails to import — you can choose more than one.":
+    "เลือกอีเมลแจ้งเตือนของธนาคารที่ต้องการนำเข้า — เลือกได้มากกว่าหนึ่ง",
 };
 
 /** Both — natural Burmese + English code-switch, Ko Wallet's original voice. */
@@ -1033,6 +1071,25 @@ const both: Dict = {
   "Save Transfer": "Save Transfer",
   "Open the wallet picker in the sidebar and tap": "Sidebar က wallet picker ဖွင့်ပြီး tap",
   "+ New Wallet": "+ New Wallet",
+
+  // Section subtitles / descriptions
+  "Track stocks, crypto, and gold — update current prices yourself.":
+    "Stocks / crypto / gold positions — current prices ကို ကိုယ်တိုင် update လုပ်ပါ",
+  "Update bank account balances yourself, whenever you check them.":
+    "Bank account balances ကို ကိုယ်တိုင် တွေ့ပြီး update လုပ်ပါ",
+  "Subscriptions and bills that repeat — auto-create on a schedule.":
+    "Subscriptions လို ပုံမှန် ပြန်ဖြစ်တဲ့ transactions တွေ — schedule အလိုက် auto-create",
+  "The Telegram bot auto-pushes a periodic summary. Requires a connected Telegram bot.":
+    "Telegram bot က ပုံမှန် summary auto-push ပါမယ်။ Telegram bot link လုပ်ထားရင်သာ အလုပ်လုပ်ပါ။",
+  "Set a savings target. Progress = income − expense since the goal was created, in the chosen currency.":
+    "Saving target သတ်မှတ်ပါ — progress = (income − expense) since goal created, in chosen currency",
+  "Used for the combined Net Worth view's currency conversion. Fill in FX rates manually.":
+    "Net Worth combined view အတွက် currency conversion သုံးပါ။ FX rate ကိုကိုယ်တိုင် ဖြည့်ပါ။",
+  "Example current rate": "ဥပမာ ပစ္စုပ္ပန် rate",
+  "Clients and outstanding invoices (mini-CRM).":
+    "Clients + မပေးရသေးတဲ့ invoices (mini-CRM)",
+  "Pick which bank notification emails to import — you can choose more than one.":
+    "Bank ဘယ်ဟာတွေက email ပို့တာကို import လုပ်ချင်လဲ ရွေးပါ — တစ်ခုထက်ပိုပြီး ရွေးနိုင်တယ်။",
 };
 
 const DICTS: Record<Lang, Dict> = {

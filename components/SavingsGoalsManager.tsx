@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Target } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
 import { useDialog } from "@/components/DialogProvider";
+import { useT } from "@/lib/i18n-client";
 
 type Goal = {
   id: string;
@@ -16,6 +17,7 @@ type Goal = {
 
 export function SavingsGoalsManager({ defaultCurrency }: { defaultCurrency: string }) {
   const dialog = useDialog();
+  const t = useT();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -67,7 +69,7 @@ export function SavingsGoalsManager({ defaultCurrency }: { defaultCurrency: stri
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500">
-          Saving target သတ်မှတ်ပါ — progress = (income − expense) since goal created, in chosen currency
+          {t("Set a savings target. Progress = income − expense since the goal was created, in the chosen currency.")}
         </p>
         <button onClick={() => setShowForm((s) => !s)} className="btn-primary text-sm py-2 px-3">
           <Plus className="w-4 h-4" /> {showForm ? "Cancel" : "Add Goal"}
