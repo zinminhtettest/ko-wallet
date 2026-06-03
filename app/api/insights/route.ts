@@ -89,48 +89,30 @@ async function callGemini(prompt: string) {
   return JSON.parse(result.response.text());
 }
 
-// Model fallback chain — V4 Flash is a non-thinking model (fast, direct JSON
-// output), V4 Pro is a reasoning model (slower, may exhaust token budget on
-// internal thinking). Flash is the right tool for AI Insights' bounded prompt.
-const DEEPSEEK_MODELS = ["deepseek-v4-flash", "deepseek-v4-pro", "deepseek-chat"];
+// V4 Flash only — non-thinking model, direct JSON output, fast.
+const DEEPSEEK_MODELS = ["deepseek-v4-flash"];
 
 async function callDeepSeekModel(model: string, prompt: string) {
-  // Hard timeout 45s so Vercel function (60s budget) can return an error
-  // gracefully rather than getting force-killed at the edge.
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45_000);
-  let res: Response;
-  try {
-    res = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Respond ONLY with a single valid JSON object. Compute all totals from the raw data first. No markdown fences, no commentary. Keep card body and recommendation under 25 words each.",
-          },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-        max_tokens: 4000,
-      }),
-      signal: controller.signal,
-    });
-  } catch (e: any) {
-    clearTimeout(timer);
-    if (e?.name === "AbortError") {
-      throw new Error(`timed out after 45s waiting for ${model}`);
-    }
-    throw e;
-  }
-  clearTimeout(timer);
+  const res = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Respond ONLY with a single valid JSON object. Compute all totals from the raw data first. No markdown fences, no commentary.",
+        },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    }),
+  });
 
   const rawBody = await res.text();
   if (!res.ok) {
@@ -236,9 +218,9 @@ export async function POST(request: Request) {
     });
   }
 
-  // Compact rows for the prompt — limit to 150 most recent transactions to
-  // keep prompt small enough for V4 Pro to complete within 60s function budget.
-  const compact = list.slice(0, 150).map((t) => ({
+  // Compact rows for the prompt — limit to 100 most recent transactions so
+  // V4 Flash can return JSON within Vercel's 60s function budget.
+  const compact = list.slice(0, 100).map((t) => ({
     d: t.occurred_at.slice(0, 10),
     k: t.kind,
     a: Number(t.amount),
