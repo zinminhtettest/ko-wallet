@@ -94,26 +94,42 @@ async function callGemini(prompt: string) {
 const DEEPSEEK_MODELS = ["deepseek-v4-pro", "deepseek-v4-flash", "deepseek-chat"];
 
 async function callDeepSeekModel(model: string, prompt: string) {
-  const res = await fetch("https://api.deepseek.com/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a careful personal-finance AI. Always compute totals from the raw data first, then write. Respond ONLY with a single valid JSON object matching the requested schema. Every number must match the data exactly. No markdown fences, no commentary.",
-        },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.2,
-    }),
-  });
+  // Hard timeout 45s so Vercel function (60s budget) can return an error
+  // gracefully rather than getting force-killed at the edge.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45_000);
+  let res: Response;
+  try {
+    res = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Respond ONLY with a single valid JSON object. Compute all totals from the raw data first. No markdown fences, no commentary. Keep card body and recommendation under 25 words each.",
+          },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.2,
+        max_tokens: 2000,
+      }),
+      signal: controller.signal,
+    });
+  } catch (e: any) {
+    clearTimeout(timer);
+    if (e?.name === "AbortError") {
+      throw new Error(`timed out after 45s waiting for ${model}`);
+    }
+    throw e;
+  }
+  clearTimeout(timer);
 
   const rawBody = await res.text();
   if (!res.ok) {
@@ -208,8 +224,9 @@ export async function POST(request: Request) {
     });
   }
 
-  // Compact rows for the prompt (limit to 500 records)
-  const compact = list.slice(0, 500).map((t) => ({
+  // Compact rows for the prompt — limit to 150 most recent transactions to
+  // keep prompt small enough for V4 Pro to complete within 60s function budget.
+  const compact = list.slice(0, 150).map((t) => ({
     d: t.occurred_at.slice(0, 10),
     k: t.kind,
     a: Number(t.amount),
