@@ -63,8 +63,17 @@ export function AIInsightsButton() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ language: lang, provider }),
       });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j?.error || "Failed");
+      const raw = await r.text();
+      let j: any;
+      try {
+        j = JSON.parse(raw);
+      } catch {
+        // Server returned non-JSON (Vercel timeout/error page, function crash, etc.)
+        throw new Error(
+          `Server returned ${r.status}: ${raw.slice(0, 200) || "no body"}`
+        );
+      }
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setResult(j);
     } catch (e: any) {
       setErr(e.message);
