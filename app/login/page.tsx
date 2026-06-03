@@ -20,12 +20,12 @@ export default function LoginPage() {
         <div className="w-14 h-14 rounded-2xl bg-brand-600 grid place-items-center text-white mx-auto mb-5">
           <Wallet className="w-7 h-7" />
         </div>
-        <h1 className="text-2xl font-bold mb-2">Ko Wallet</h1>
-        <p className="text-slate-600 mb-8">
-          Google အကောင့်နဲ့ login ဝင်ပါ။ <br />
-          Data တွေ ဒီအကောင့်နဲ့ cloud မှာ သိမ်းထားမှာဖြစ်လို့ device ပြောင်းပြောင်း ပါသွားမယ်။
+        <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Ko Wallet</h1>
+        <p className="text-slate-600 dark:text-slate-300 mb-8">
+          Sign in with your Google account. <br />
+          Your data is saved to the cloud, so it follows you across every device.
         </p>
-        <button onClick={signInWithGoogle} className="btn w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 py-3">
+        <button onClick={signInWithGoogle} className="btn w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:hover:bg-slate-700 dark:text-white py-3">
           <svg viewBox="0 0 24 24" className="w-5 h-5">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09Z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z" fill="#34A853"/>
@@ -34,8 +34,8 @@ export default function LoginPage() {
           </svg>
           Continue with Google
         </button>
-        <p className="text-xs text-slate-400 mt-6">
-          Login ဝင်တာနဲ့ Privacy Policy & Terms ကို သဘောတူပါတယ်။
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-6">
+          By signing in, you agree to our Privacy Policy and Terms.
         </p>
       </div>
     </main>
