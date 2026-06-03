@@ -3,6 +3,7 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import Link from "next/link";
 import { InviteMemberForm } from "@/components/InviteMemberForm";
 import { RemoveMemberButton } from "@/components/RemoveMemberButton";
+import { CancelInviteButton } from "@/components/CancelInviteButton";
 import { Copy } from "lucide-react";
 import { ClientDate } from "@/components/ClientDate";
 
@@ -75,14 +76,19 @@ export default async function WorkspaceSettingsPage() {
       {invites && invites.length > 0 && (
         <div className="card p-5">
           <h3 className="font-semibold mb-3">Pending Invites</h3>
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
             {invites.map((inv: any) => {
               const url = `${appUrl}/invite/${inv.token}`;
               return (
-                <li key={inv.id} className="py-3">
-                  <div className="font-medium">{inv.email}</div>
-                  <div className="text-xs text-slate-500 break-all">{url}</div>
-                  <CopyLinkButton url={url} />
+                <li key={inv.id} className="py-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{inv.email}</div>
+                    <div className="text-xs text-slate-500 break-all">{url}</div>
+                    <CopyLinkButton url={url} />
+                  </div>
+                  {ctx.role === "owner" && (
+                    <CancelInviteButton inviteId={inv.id} email={inv.email} />
+                  )}
                 </li>
               );
             })}
