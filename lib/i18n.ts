@@ -735,16 +735,16 @@ const th: Dict = {
 
 /** Both — natural Burmese + English code-switch, Ko Wallet's original voice. */
 const both: Dict = {
-  // Nav
+  // Nav — keep core UI labels in English even in Both mode
   "Dashboard": "Dashboard",
-  "Transactions": "ငွေပြောင်းရွေ့မှု",
+  "Transactions": "Transactions",
   "Reports": "Reports",
   "Settings": "Settings",
   "Notifications": "သတိပေးချက်များ",
   "Sign out": "ထွက်ရန်",
 
-  // Buttons
-  "Add": "ထည့်",
+  // Buttons — keep button labels English in Both mode
+  "Add": "Add",
   "Add Transaction": "+ Add Transaction",
   "Save": "သိမ်း",
   "Save changes": "ပြောင်းလဲချက် Save",
@@ -754,21 +754,21 @@ const both: Dict = {
   "Back": "နောက်သို့",
   "Export": "Export",
   "Import": "Import",
-  "Split": "ခွဲဝေ",
+  "Split": "Split",
   "Search": "ရှာ",
   "View all": "အကုန်ကြည့်",
   "Apply filters": "Apply filters",
 
-  // Settings tiles
+  // Settings tiles — keep tile titles English in Both mode
   "Language": "ဘာသာစကား",
   "Wallet Settings": "Wallet Settings",
-  "Family Workspace": "မိသားစု Workspace",
+  "Family Workspace": "Family Workspace",
   "Categories": "Categories",
   "Budgets": "Budget များ",
   "Recurring Transactions": "Recurring Transactions",
   "Telegram Bot": "Telegram Bot",
   "Auto Digest": "Auto Digest",
-  "Transfer Between Wallets": "Wallet ၂ ခုကြား ပြောင်း",
+  "Transfer Between Wallets": "Transfer Between Wallets",
   "Saving Goals": "Saving Goals",
   "Currency Rates": "Currency Rates",
   "Bank Accounts": "Bank Accounts",
