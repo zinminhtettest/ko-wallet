@@ -107,14 +107,9 @@ export default function LoginPage() {
           Your data is saved to the cloud, so it follows you across every device.
         </p>
 
-        {/* Real GIS button — click opens centered popup chooser with kowallet.app.
-            mix-blend-mode hides the iframe's white background while keeping the
-            blue pill visible against our dark card. */}
+        {/* Real GIS button — click opens centered popup chooser with kowallet.app */}
         {CLIENT_ID && (
-          <div
-            className="flex justify-center"
-            style={{ mixBlendMode: "multiply", colorScheme: "dark" }}
-          >
+          <div className="flex justify-center">
             <div ref={btnRef} />
           </div>
         )}
