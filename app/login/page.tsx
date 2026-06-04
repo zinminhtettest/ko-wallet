@@ -11,21 +11,39 @@ declare global {
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
+// Generate a random nonce string for FedCM/GIS. The raw value is sent to
+// Supabase; its SHA-256 hash is the value Google embeds in the issued
+// id_token's `nonce` claim. Supabase verifies the hash matches.
+function randomNonce(): string {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export default function LoginPage() {
   const btnRef = useRef<HTMLDivElement>(null);
+  const rawNonceRef = useRef<string>("");
   const [gisReady, setGisReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // GIS button click opens the full centered account-chooser popup, and the
-  // consent screen reads "Sign in to kowallet.app" because Google validates
-  // the JS origin (not Supabase). One Tap corner widget is suppressed.
+  // GIS button click opens the FedCM-native account chooser. Consent screen
+  // shows "kowallet.app". We pass a hashed nonce so the id_token can be
+  // verified end-to-end on the Supabase side.
   useEffect(() => {
     if (!CLIENT_ID) return;
     let cancelled = false;
 
-    function init() {
+    async function init() {
       if (cancelled || !window.google?.accounts?.id || !btnRef.current) return;
+      const rawNonce = randomNonce();
+      rawNonceRef.current = rawNonce;
+      const hashedNonce = await sha256Hex(rawNonce);
       try {
         window.google.accounts.id.initialize({
           client_id: CLIENT_ID,
@@ -34,10 +52,7 @@ export default function LoginPage() {
           auto_select: false,
           context: "signin",
           itp_support: true,
-          // FedCM gives the OS-native account chooser (no Chrome Custom Tab
-          // header on Android PWA) and a cleaner desktop popup. Falls back
-          // to the legacy chooser automatically if the browser doesn't
-          // support FedCM yet.
+          nonce: hashedNonce,
           use_fedcm_for_prompt: true,
           use_fedcm_for_button: true,
         });
@@ -67,7 +82,9 @@ export default function LoginPage() {
     script.id = "gsi-script";
     script.async = true;
     script.defer = true;
-    script.onload = init;
+    script.onload = () => {
+      init();
+    };
     document.head.appendChild(script);
     return () => {
       cancelled = true;
@@ -81,6 +98,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithIdToken({
       provider: "google",
       token: response.credential,
+      nonce: rawNonceRef.current || undefined,
     });
     if (error) {
       setErr(error.message);
@@ -134,7 +152,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Legacy fallback — only shown if env var missing or GIS failed to load */}
         {(!CLIENT_ID || !gisReady) && (
           <button
             onClick={legacySignIn}
