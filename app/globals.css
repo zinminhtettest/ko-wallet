@@ -21,9 +21,27 @@ html.dark {
 }
 
 html { background: var(--bg); color: var(--fg); }
-body { background: var(--bg); color: var(--fg); }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  /* Respect device safe-area insets (notch / rounded corners / dynamic island).
+     On PWA standalone the right edge can clip without this. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
 
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Hide the native vertical scrollbar everywhere — the page still scrolls,
+   but the chrome bar that looks out-of-place inside a PWA is suppressed.
+   Use overlay scrollbar visuals only via the .scrollbar-hide utility. */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy IE/Edge */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar { display: none; }
