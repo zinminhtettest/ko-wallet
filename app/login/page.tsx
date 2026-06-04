@@ -120,7 +120,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen grid place-items-center px-6">
+    <main className="min-h-screen min-h-[100dvh] grid place-items-center px-6 py-8">
       <div className="card p-8 max-w-md w-full text-center">
         <div className="w-14 h-14 rounded-2xl bg-brand-600 grid place-items-center text-white mx-auto mb-5">
           <Wallet className="w-7 h-7" />
