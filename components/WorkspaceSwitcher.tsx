@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronDown, Check, Plus, Wallet } from "lucide-react";
+import { KLogo } from "@/components/KLogo";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n-client";
 
@@ -139,9 +140,7 @@ export function WorkspaceSwitcher({ activeId }: { activeId: string }) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-left"
       >
-        <div className="w-9 h-9 rounded-lg bg-brand-600 grid place-items-center text-white flex-shrink-0">
-          <Wallet className="w-5 h-5" />
-        </div>
+        <KLogo className="w-9 h-9 rounded-lg flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="font-semibold leading-tight text-slate-900 dark:text-white truncate">Ko Wallet</div>
           <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{activeName}</div>

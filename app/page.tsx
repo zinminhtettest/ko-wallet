@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { Wallet, Mail, Users, BarChart3 } from "lucide-react";
+import { KLogo } from "@/components/KLogo";
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="flex items-center gap-3 mb-12">
-          <div className="w-10 h-10 rounded-xl bg-brand-600 grid place-items-center text-white">
-            <Wallet className="w-6 h-6" />
-          </div>
+          <KLogo className="w-10 h-10 rounded-xl" />
           <span className="text-xl font-bold text-slate-900 dark:text-white">Ko Wallet</span>
         </div>
 

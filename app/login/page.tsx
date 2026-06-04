@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Wallet } from "lucide-react";
+import { KLogo } from "@/components/KLogo";
 
 declare global {
   interface Window {
@@ -99,9 +99,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen grid place-items-center px-6">
       <div className="card p-8 max-w-md w-full text-center">
-        <div className="w-14 h-14 rounded-2xl bg-brand-600 grid place-items-center text-white mx-auto mb-5">
-          <Wallet className="w-7 h-7" />
-        </div>
+        <KLogo className="w-14 h-14 rounded-2xl mx-auto mb-5" />
         <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Ko Wallet</h1>
         <p className="text-slate-600 dark:text-slate-300 mb-8">
           Sign in with your Google account. <br />
