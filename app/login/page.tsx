@@ -34,6 +34,12 @@ export default function LoginPage() {
           auto_select: false,
           context: "signin",
           itp_support: true,
+          // FedCM gives the OS-native account chooser (no Chrome Custom Tab
+          // header on Android PWA) and a cleaner desktop popup. Falls back
+          // to the legacy chooser automatically if the browser doesn't
+          // support FedCM yet.
+          use_fedcm_for_prompt: true,
+          use_fedcm_for_button: true,
         });
         window.google.accounts.id.renderButton(btnRef.current, {
           theme: "filled_blue",
