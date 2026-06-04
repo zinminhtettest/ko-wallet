@@ -32,6 +32,7 @@ export default function LoginPage() {
           ux_mode: "popup",
           auto_select: false,
           context: "signin",
+          locale: "en",
         });
         window.google.accounts.id.renderButton(btnRef.current, {
           theme: "filled_blue",
@@ -40,6 +41,7 @@ export default function LoginPage() {
           shape: "pill",
           text: "continue_with",
           logo_alignment: "left",
+          locale: "en",
         });
         setGisReady(true);
       } catch (e) {
@@ -53,7 +55,10 @@ export default function LoginPage() {
       return;
     }
     const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
+    // hl=en forces the button text into English regardless of the
+    // browser's Accept-Language header (otherwise Thai/Burmese users
+    // would see localized text on this English landing page).
+    script.src = "https://accounts.google.com/gsi/client?hl=en";
     script.id = "gsi-script";
     script.async = true;
     script.defer = true;
