@@ -107,10 +107,24 @@ export default function LoginPage() {
           Your data is saved to the cloud, so it follows you across every device.
         </p>
 
-        {/* Real GIS button — click opens centered popup chooser with kowallet.app */}
+        {/* Real GIS button — click opens centered popup chooser with kowallet.app.
+            We clip the iframe's outer white edges by sizing the wrapper to the
+            pill's exact dimensions and using overflow:hidden + a pill border-radius.
+            The blue pill and its white text are preserved untouched. */}
         {CLIENT_ID && (
           <div className="flex justify-center">
-            <div ref={btnRef} />
+            <div
+              style={{
+                width: 320,
+                height: 40,
+                overflow: "hidden",
+                borderRadius: 999,
+                display: "inline-block",
+                lineHeight: 0,
+              }}
+            >
+              <div ref={btnRef} style={{ marginTop: -1 }} />
+            </div>
           </div>
         )}
 
