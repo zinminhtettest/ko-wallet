@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Emit a self-contained server bundle for the VPS Docker image
+  // (copies only the minimal node_modules the server actually uses).
+  output: "standalone",
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },
   },

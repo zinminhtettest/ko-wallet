@@ -1,0 +1,35 @@
+# Ko Wallet — production Caddyfile
+# Deploy: copy this to /etc/caddy/Caddyfile on the VPS, then `systemctl reload caddy`.
+#
+# HTTPS is issued automatically by Let's Encrypt on first request.
+# For Cloudflare-proxied domains: set Cloudflare SSL/TLS mode to "Full (strict)".
+
+{
+    # Global options
+    email admin@kowallet.app
+}
+
+kowallet.app {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:3000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+    log {
+        output file /var/log/caddy/kowallet.log {
+            roll_size 20mb
+            roll_keep 7
+        }
+    }
+}
+
+www.kowallet.app {
+    redir https://kowallet.app{uri} permanent
+}

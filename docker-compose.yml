@@ -1,0 +1,32 @@
+# Ko Wallet production compose for the HostHatch VPS.
+# Caddy runs on the host (not in Docker) and reverse-proxies to 127.0.0.1:3000.
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        # NEXT_PUBLIC_* vars need to be baked in at build time so client JS
+        # sees them. Docker Compose reads these from the .env file next to
+        # this docker-compose.yml automatically.
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+    container_name: ko-wallet
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # Bind to loopback only — Caddy on the host talks to us via 127.0.0.1.
+      # Public traffic must go through Caddy so it terminates TLS.
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
